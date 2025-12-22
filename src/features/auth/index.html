@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Login Template</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- CSS STYLING --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Gradient nền tím/hồng như trong ảnh */
+            background: linear-gradient(135deg, #5b54fa, #be4bdb);
+        }
+
+        .container {
+            width: 960px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            overflow: hidden;
+            max-width: 90%;
+        }
+
+        /* Phần bên trái (Hình ảnh minh họa) */
+        .login-pic {
+            width: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #fff;
+            position: relative;
+        }
+
+        /* Vòng tròn nền mờ sau máy tính */
+        .circle-bg {
+            width: 250px;
+            height: 250px;
+            background: #f2f2f2;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Icon máy tính minh họa */
+        .login-pic i.fa-laptop {
+            font-size: 120px;
+            color: #333;
+        }
+        
+        /* Icon người nhỏ bên trong màn hình */
+        .login-pic i.fa-user {
+            position: absolute;
+            font-size: 40px;
+            color: #fff;
+            margin-bottom: 25px; /* Căn chỉnh vào giữa màn hình laptop */
+        }
+
+        /* Các hình trang trí nhỏ (tam giác, tròn) */
+        .shape {
+            position: absolute;
+        }
+        .shape-circle { top: 20%; left: 20%; color: #00bcd4; font-size: 10px; }
+        .shape-triangle { bottom: 20%; left: 15%; color: #8bc34a; font-size: 12px; }
+        .shape-square { top: 30%; right: 20%; color: #e91e63; font-size: 8px; }
+
+        /* Phần bên phải (Form đăng nhập) */
+        .login-form {
+            width: 50%;
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .login-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 40px;
+        }
+
+        /* Input Group */
+        .input-group {
+            width: 100%;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px 20px 15px 50px; /* Padding trái lớn để chừa chỗ cho icon */
+            border: none;
+            background: #e6e6e6;
+            border-radius: 30px;
+            font-size: 14px;
+            color: #555;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .input-group input:focus {
+            background: #d9d9d9;
+        }
+
+        /* Icon bên trong input */
+        .input-group i {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Nút Login */
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 30px;
+            background: #57b846; /* Màu xanh lá */
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+
+        .login-btn:hover {
+            background: #333;
+        }
+
+        /* Text phụ */
+        .forgot-pass {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #666;
+            text-decoration: none;
+        }
+
+        .forgot-pass:hover {
+            color: #57b846;
+        }
+
+        .create-account {
+            margin-top: 80px; /* Đẩy xuống dưới cùng */
+            font-size: 13px;
+            color: #666;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .create-account i {
+            margin-left: 5px;
+            transition: 0.3s;
+        }
+
+        .create-account:hover i {
+            transform: translateX(5px);
+        }
+
+        /* Responsive cho Mobile */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                width: 90%;
+            }
+            .login-pic {
+                width: 100%;
+                padding: 30px 0;
+            }
+            .login-form {
+                width: 100%;
+                padding: 40px 20px;
+            }
+            .create-account {
+                margin-top: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="login-pic">
+            <div class="circle-bg">
+                <i class="fa-solid fa-laptop"></i>
+                <i class="fa-regular fa-user" style="color: #555; position:absolute; font-size:30px; margin-bottom: 20px;"></i>
+            </div>
+            
+            <div class="shape shape-circle"><i class="far fa-circle"></i></div>
+            <div class="shape shape-triangle"><i class="fas fa-play" style="transform: rotate(-90deg);"></i></div>
+            <div class="shape shape-square"><i class="far fa-square"></i></div>
+        </div>
+
+        <div class="login-form">
+            <h2 class="login-title">Member Login</h2>
+            
+            <form id="loginForm">
+                <div class="input-group">
+                    <i class="fa-solid fa-envelope"></i>
+                    <input type="email" id="email" placeholder="Email" required>
+                </div>
+
+                <div class="input-group">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+
+                <button type="submit" class="login-btn">LOGIN</button>
+            </form>
+
+            <a href="#" class="forgot-pass">Forgot Username / Password?</a>
+            
+            <a href="#" class="create-account">
+                Create your Account 
+                <i class="fa-solid fa-arrow-right-long"></i>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // --- JAVASCRIPT LOGIC ---
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Ngăn form tải lại trang
+
+            // Lấy giá trị input
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // Kiểm tra đơn giản (Validation)
+            if(email && password) {
+                // Hiệu ứng loading giả lập hoặc thông báo
+                const btn = document.querySelector('.login-btn');
+                const originalText = btn.innerText;
+                
+                btn.innerText = "LOGGING IN...";
+                btn.style.background = "#4cae4c";
+
+                setTimeout(() => {
+                    alert(`Đăng nhập thành công!\nEmail: ${email}`);
+                    btn.innerText = originalText;
+                    btn.style.background = "#57b846";
+                }, 1000);
+            }
+        });
+    </script>
+
+</body>
+</html>
