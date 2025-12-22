@@ -1,10 +1,11 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
-
+// import Login from './features/auth/Login.tsx';
+import Register from './features/auth/Register.tsx';
 const App: React.FC = ()=>{
   return (
-    <div></div>
+    // <Login></Login>
+    <Register></Register>
   )
 }
 
