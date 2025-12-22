@@ -18,7 +18,7 @@ export function MainApp() {
               width: "450px",
               flexShrink: 0,
               height: "90vh",
-              padding: "1rem",
+              padding: "0.25rem",
             }}
           >
             <RoomPanel></RoomPanel>
@@ -27,7 +27,7 @@ export function MainApp() {
             style={{
               flexGrow: 1,
               height: "90vh",
-              padding: "1rem",
+              padding: "0.25rem",
             }}
           >
             <ChatPanel></ChatPanel>

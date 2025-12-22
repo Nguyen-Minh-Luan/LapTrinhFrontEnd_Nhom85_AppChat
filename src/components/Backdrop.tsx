@@ -7,6 +7,7 @@ export function Backdrop({ imageUrl }) {
           <img src={imageUrl} className="backdrop-image" alt="Backdrop" />
         )}
       </div>
+      <div className="background"></div>
     </>
   );
 }
