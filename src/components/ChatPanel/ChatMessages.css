@@ -1,0 +1,31 @@
+.message-container {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 10px;
+}
+
+.message-content {
+    background-color: var(--message-content-bg-color);
+    padding: 8px 12px;
+    border-radius: 15px 15px 15px 0;
+    max-width: 50%;
+    word-wrap: break-word;
+}
+
+.message-container.owner {
+    justify-content: flex-end;
+}
+
+.message-content img {
+    width: 100%;
+}
+
+.message-content.owner {
+    background-color: var(--message-content-owner-bg-color);
+    border-radius: 15px 15px 0 15px;
+}
+
+.message-content p {
+    margin: 0px;
+    padding: 0px;
+}

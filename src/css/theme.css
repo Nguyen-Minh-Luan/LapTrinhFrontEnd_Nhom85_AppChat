@@ -1,0 +1,36 @@
+:root {
+    --primary-bg-color: #f5d6e1;
+    --border-radius: 8px;
+    --message-content-bg-color: #f5d6e1;
+    --message-content-owner-bg-color: #f5d6e1;
+}
+
+body {
+    font-family: "Noto Sans", sans-serif;
+    margin: 0px;
+    overflow: hidden;
+}
+
+.acrylic-eff {
+    backdrop-filter: blur(15px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(15px) saturate(150%);
+}
+
+.glass-eff {
+    backdrop-filter: blur(15px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(15px) saturate(150%);
+    border: 1px solid #ffffffb2;
+}
+
+.dropshadow {
+    filter: drop-shadow(0px 0px 5px black);
+}
+
+.border-radius {
+    border-radius: var(--border-radius);
+}
+
+.btn {
+    cursor: pointer;
+    border: none;
+}
