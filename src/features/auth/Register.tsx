@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import './Login.css'; // dùng chung CSS với Login
+import './Login.css';
+import { Link } from 'react-router-dom';
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -22,7 +23,7 @@ const Register = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
@@ -91,7 +92,7 @@ const Register = () => {
           </button>
 
           <div className="form-options">
-            <a href="/login" className="forgot-password">Already have an account?</a>
+            <Link to={"/login"} className="forgot-password">Already have an account?</Link>
           </div>
         </form>
       </div>

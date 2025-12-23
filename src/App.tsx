@@ -1,11 +1,9 @@
 import React from 'react';
 import './App.css';
-// import Login from './features/auth/Login.tsx';
-import Register from './features/auth/Register.tsx';
+import Router from './routes/Router.tsx';
 const App: React.FC = ()=>{
   return (
-    // <Login></Login>
-    <Register></Register>
+    <Router></Router>
   )
 }
 
