@@ -1,0 +1,114 @@
+
+.sidebar {
+  width: 350px;
+  height: 100vh;
+  background-color: #f0f2f5;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.headerIcons {
+  display: flex;
+  gap: 15px;
+  color: #54656f;
+}
+
+.searchWrapper {
+  padding: 10px 15px;
+}
+
+.searchBar {
+  width: 100%;
+  padding: 8px 15px;
+  border-radius: 20px;
+  border: none;
+  background-color: #e9edef;
+  font-size: 14px;
+  outline: none;
+}
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 10px;
+}
+
+.item {
+  display: flex;
+  padding: 12px 20px;
+  cursor: pointer;
+  align-items: center;
+  position: relative;
+}
+
+.activeItem {
+  background-color: #ffffff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.avatarWrapper {
+  position: relative;
+  margin-right: 15px;
+}
+
+.avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.onlineBadge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  background-color: #06d755;
+  border: 2px solid #f0f2f5;
+  border-radius: 50%;
+}
+
+.content {
+  flex: 1;
+  border-bottom: 1px solid #e9edef;
+  padding-bottom: 10px;
+}
+
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.name {
+  font-weight: 600;
+  color: #111b21;
+}
+
+.time {
+  font-size: 12px;
+  color: #667781;
+}
+
+.msgRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lastMsg {
+  font-size: 13px;
+  color: #667781;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
