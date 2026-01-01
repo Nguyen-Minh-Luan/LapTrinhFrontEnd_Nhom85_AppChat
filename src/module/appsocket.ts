@@ -18,7 +18,6 @@ export class ChatSocket {
     this.onConnected = null;
     this.onError = null;
     this.onClosed = null;
-    this.connect();
   }
 
   /**
