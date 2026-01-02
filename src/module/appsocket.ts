@@ -18,17 +18,43 @@ export class ChatSocket {
     this.onConnected = null;
     this.onError = null;
     this.onClosed = null;
-  }
 
+  }
+  public isConnect (): boolean{
+    if(!this.socket || this.socket.readyState !== WebSocket.OPEN){
+      return false
+    }
+    return true
+  }
   /**
    * Thiết lập kết nối WebSocket.
    * Đăng ký các hàm xử lý sự kiện khi kết nối mở, nhận tin nhắn, lỗi và đóng.
    */
-  public connect(): void {
+  public connect(timeout = 60000): Promise<void> {
+  // Nếu socket đã mở thì resolve ngay
+  if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
     this.socket = new WebSocket(this.url);
 
+    const timer = setTimeout(() => {
+      reject(new Error("Connect timeout"));
+    }, timeout);
+
     this.socket.onopen = () => {
+      clearTimeout(timer);
+      console.log("onopen, readyState:", this.socket?.readyState);
       if (this.onConnected) this.onConnected();
+      resolve();
+    };
+
+    this.socket.onerror = (error: Event) => {
+      clearTimeout(timer);
+      console.error("Lỗi WebSocket:", error);
+      if (this.onError) this.onError(error);
+      reject(error);
     };
 
     this.socket.onmessage = (event: MessageEvent) => {
@@ -40,15 +66,28 @@ export class ChatSocket {
       }
     };
 
-    this.socket.onerror = (error: Event) => {
-      console.error("Lỗi WebSocket:", error);
-      if (this.onError) this.onError(error);
-    };
-
     this.socket.onclose = () => {
+      clearTimeout(timer);
       if (this.onClosed) this.onClosed();
     };
-  }
+  });
+}
+
+//   public waitingForConnecting(timeout = 60000): Promise<void> {
+//   return new Promise((resolve, reject) => {
+//     const timestart = Date.now();
+//     const checkConnection = () => {
+//       if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+//         resolve();
+//       } else if (Date.now() - timestart > timeout) {
+//         reject(new Error("waitingForConnecting: timeout"));
+//       } else {
+//         setTimeout(checkConnection, 500);
+//       }
+//     };
+//     checkConnection();
+//   });
+// }
 
   /**
    * Gửi một tin nhắn đến máy chủ WebSocket.
