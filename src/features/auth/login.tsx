@@ -1,21 +1,20 @@
-    import React, { useState } from 'react';
-    import './Login.css';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import './Login.css';
+import { Link, useNavigate } from 'react-router-dom';
+import { CURRENT_SOCKET } from '../../module/appsocket.ts';
 
     const Login = () => {
       const [showPassword, setShowPassword] = useState(false);
+      const navigate = useNavigate();
+      const [isConnecting, setIsConnecting] = useState(false);
       const [formData, setFormData] = useState({
         username: '',
         password: '',
         rememberMe: false
       });
-
-
-
       const togglePassword = () => {
         setShowPassword(!showPassword);
       };
-
       const handleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, checked } = e.target;
         setFormData(prev => ({
@@ -24,17 +23,66 @@ import { Link } from 'react-router-dom';
         }));
       };
 
-      const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+      const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setIsConnecting(true)
+        const login = ()=>{
         console.log('Form submitted:', formData);
+        const {username,password,rememberMe} = formData;
+        CURRENT_SOCKET.login(username,password)
+        }
+        if(!CURRENT_SOCKET.isConnect()){
+          await CURRENT_SOCKET.connect(); 
+        }
+        login()
+        setIsConnecting(false)
       };
+      
+      useEffect(()=>{
+         CURRENT_SOCKET.onConnected = () => {
+          console.log("Socket connected");
+        };
+
+        CURRENT_SOCKET.onMessageReceived = (data) => {
+          console.log("Server trả về:", data);
+
+          if (data.event === "LOGIN") {
+            if (data.status === "success") {
+              console.log("Login thành công");
+              navigate("/register")
+            } else {
+              console.log("Login thất bại:", data.message);
+            }
+          }
+        };
+        CURRENT_SOCKET.onError = (e) => {
+          console.error("Socket error", e);
+        };
+
+        CURRENT_SOCKET.onClosed = () => {
+          console.log("Socket closed");
+        };
+        return () => {
+          CURRENT_SOCKET.onConnected = null;
+          CURRENT_SOCKET.onMessageReceived = null;
+          CURRENT_SOCKET.onError = null;
+          CURRENT_SOCKET.onClosed = null;
+        };
+      },[]);
 
       return (
+        
         <div className="login-wrapper">
           <div className="login-container">
             <h1 className="main-title">Login to App Chat</h1>
 
             <form onSubmit={handleSubmit} className="login-form">
+              {isConnecting && (
+              <div className="overlay">
+                <div className="spinner"></div>
+                <p>Đang kết nối...</p>
+              </div>
+              )}
               <div className="input-group">
                 <input
                   type="text"
