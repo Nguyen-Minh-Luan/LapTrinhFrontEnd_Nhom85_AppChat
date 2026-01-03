@@ -3,6 +3,7 @@ import "./css/styles.css";
 import "./css/theme.css";
 import { BrowserRouter } from "react-router";
 import Router from "./routes/Router";
+import { TestModule } from "./features/test/TestModule";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement,
@@ -10,5 +11,6 @@ const root = ReactDOM.createRoot(
 root.render(
   <BrowserRouter>
     <Router />
+    <TestModule />
   </BrowserRouter>,
 );

@@ -2,7 +2,7 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router";
 import Login from "../features/auth/login";
 import Register from "../features/auth/Register";
-import { MainApp } from "../features/MainChat/MainApp";
+import { MainApp } from "../features/MainApp/MainApp";
 // import Test from "../module/Test.tsx";
 
 const Router = () => {

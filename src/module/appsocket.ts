@@ -1,4 +1,4 @@
-const BASE_URL = "wss://chat.longapp.site/chat";
+const BASE_URL = "wss://chat.longapp.site/chat/chat";
 
 export class ChatSocket {
   isConnect() {
@@ -135,7 +135,7 @@ export class ChatSocket {
    * @param roomName Tên của phòng chat cần tham gia.
    */
   public joinRoom(roomName: string): void {
-    this._send("JOIN ROOM", {
+    this._send("JOIN_ROOM", {
       name: roomName,
     });
   }

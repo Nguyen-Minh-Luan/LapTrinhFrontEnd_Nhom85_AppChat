@@ -1,6 +1,6 @@
-import { Backdrop } from "./Backdrop";
-import { ChatPanel } from "./ChatPanel";
-import { RoomPanel } from "./RoomPanel";
+import { Backdrop } from "../MainChat/Backdrop";
+import { ChatPanel } from "../MainChat/ChatPanel";
+import { RoomPanel } from "../MainChat/RoomPanel";
 import { Navbar } from "../Navbar/Navbar";
 
 export function MainApp() {

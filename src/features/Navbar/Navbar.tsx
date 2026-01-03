@@ -4,7 +4,7 @@ export function Navbar() {
   return (
     <>
       <div className="navbar glass-eff border-radius dropshadow">
-        <div className="flex flex-grow">
+        <div className="flex flex-grow full-width">
           <div className="flex navbar-left">Home</div>
           <div className="flex navbar-right">Profile</div>
         </div>
