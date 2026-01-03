@@ -107,7 +107,7 @@ export class ChatSocket {
    * @param code Mã đăng nhập lại.
    */
   public reLogin(user: string, code: string): void {
-    this._send("RE LOGIN", {
+    this._send("RE_LOGIN", {
       user: user,
       code: code,
     });

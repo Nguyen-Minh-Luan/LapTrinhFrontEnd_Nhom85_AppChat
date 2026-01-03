@@ -37,15 +37,15 @@
 }
 
 .file-drop-container {
-    position: "absolute";
+    position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: "rgba(0, 123, 255, 0.2)";
-    border: "2px dashed #007bff";
-    display: "flex";
-    align-items: "center";
-    justify-content: "center";
-    pointer-events: "none";
+    background-color: rgba(0, 123, 255, 0.2);
+    border: 2px dashed #007bff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
 }
