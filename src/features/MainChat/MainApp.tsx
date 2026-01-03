@@ -1,7 +1,7 @@
-import { Backdrop } from "../components/Backdrop.tsx";
-import { ChatPanel } from "../components/ChatPanel.tsx";
-import { RoomPanel } from "../components/RoomPanel.tsx";
-import { Navbar } from "./layout/Navbar.tsx";
+import { Backdrop } from "./Backdrop";
+import { ChatPanel } from "./ChatPanel";
+import { RoomPanel } from "./RoomPanel";
+import { Navbar } from "../Navbar/Navbar";
 
 export function MainApp() {
   return (

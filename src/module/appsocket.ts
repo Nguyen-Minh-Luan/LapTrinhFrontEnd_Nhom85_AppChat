@@ -1,6 +1,10 @@
 const BASE_URL = "wss://chat.longapp.site/chat";
 
 export class ChatSocket {
+  isConnect() {
+    return true;
+  }
+
   private url: string;
   private socket: WebSocket | null;
   public onMessageReceived: ((data: any) => void) | null;

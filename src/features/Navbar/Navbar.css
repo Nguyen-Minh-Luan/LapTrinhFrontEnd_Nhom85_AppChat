@@ -6,6 +6,7 @@
     flex-direction: column;
     align-items: center;
     contain: layout style paint;
+    width: 100%;
 }
 
 .navbar-left {

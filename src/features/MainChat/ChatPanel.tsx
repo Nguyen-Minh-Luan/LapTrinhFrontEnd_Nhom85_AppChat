@@ -1,5 +1,5 @@
 import "./ChatPanel.css";
-import { ChatMessage } from "./ChatPanel/ChatMessages.tsx";
+import { ChatMessage } from "./ChatPanel/ChatMessages";
 
 export function ChatPanel() {
   return (
