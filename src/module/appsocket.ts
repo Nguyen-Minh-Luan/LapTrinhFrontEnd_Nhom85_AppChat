@@ -1,10 +1,6 @@
 const BASE_URL = "wss://chat.longapp.site/chat";
 
 export class ChatSocket {
-  isConnect() {
-    return true;
-  }
-
   private url: string;
   private socket: WebSocket | null;
   public onMessageReceived: ((data: any) => void) | null;
@@ -25,15 +21,53 @@ export class ChatSocket {
     this.connect();
   }
 
+  public isConnect (): boolean{
+    if(!this.socket || this.socket.readyState !== WebSocket.OPEN){
+      return false
+    }
+    return true
+  }
+
+
+
+  public reconnect () : void{
+    if(!this.isConnect()){
+      this.onMessageReceived = null;
+      this.onConnected = null;
+      this.onError = null;
+      this.onClosed = null;
+      this.connect()
+    }
+  }
+
   /**
    * Thiết lập kết nối WebSocket.
    * Đăng ký các hàm xử lý sự kiện khi kết nối mở, nhận tin nhắn, lỗi và đóng.
    */
-  public connect(): void {
+  public connect(timeout = 60000): Promise<void> {
+  if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
     this.socket = new WebSocket(this.url);
 
+    const timer = setTimeout(() => {
+      reject(new Error("Connect timeout"));
+    }, timeout);
+
     this.socket.onopen = () => {
+      clearTimeout(timer);
+      console.log("onopen, readyState:", this.socket?.readyState);
       if (this.onConnected) this.onConnected();
+      resolve();
+    };
+
+    this.socket.onerror = (error: Event) => {
+      clearTimeout(timer);
+      console.error("Lỗi WebSocket:", error);
+      if (this.onError) this.onError(error);
+      reject(error);
     };
 
     this.socket.onmessage = (event: MessageEvent) => {
@@ -45,15 +79,13 @@ export class ChatSocket {
       }
     };
 
-    this.socket.onerror = (error: Event) => {
-      console.error("Lỗi WebSocket:", error);
-      if (this.onError) this.onError(error);
-    };
-
     this.socket.onclose = () => {
+      clearTimeout(timer);
+      this.reconnect()
       if (this.onClosed) this.onClosed();
     };
-  }
+  });
+}
 
   /**
    * Gửi một tin nhắn đến máy chủ WebSocket.
