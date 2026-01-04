@@ -31,9 +31,11 @@ import { CURRENT_SOCKET } from '../../module/appsocket.ts';
         const {username,password,rememberMe} = formData;
         CURRENT_SOCKET.login(username,password)
         }
+
         if(!CURRENT_SOCKET.isConnect()){
           await CURRENT_SOCKET.connect(); 
         }
+
         login()
         setIsConnecting(false)
       };
@@ -81,6 +83,7 @@ import { CURRENT_SOCKET } from '../../module/appsocket.ts';
               <div className="overlay">
                 <div className="spinner"></div>
                 <p>Đang kết nối...</p>
+
               </div>
               )}
               <div className="input-group">
