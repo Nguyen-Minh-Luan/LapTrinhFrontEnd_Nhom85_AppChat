@@ -1,3 +1,4 @@
+
 const BASE_URL = "wss://chat.longapp.site/chat/chat";
 
 export class ChatSocket {
@@ -7,6 +8,7 @@ export class ChatSocket {
   public onConnected: (() => void) | null;
   public onError: ((event: Event) => void) | null;
   public onClosed: (() => void) | null;
+  public response: any;
 
   /**
    * Khởi tạo một đối tượng ChatSocket và cố gắng kết nối đến máy chủ WebSocket.
@@ -18,9 +20,8 @@ export class ChatSocket {
     this.onConnected = null;
     this.onError = null;
     this.onClosed = null;
-
+    this.response=null;
   }
-
 
   public isConnect (): boolean{
     if(!this.socket || this.socket.readyState !== WebSocket.OPEN){
@@ -33,14 +34,9 @@ export class ChatSocket {
 
   public reconnect () : void{
     if(!this.isConnect()){
-      this.onMessageReceived = null;
-      this.onConnected = null;
-      this.onError = null;
-      this.onClosed = null;
       this.connect()
     }
   }
-
 
   /**
    * Thiết lập kết nối WebSocket.
@@ -75,7 +71,9 @@ export class ChatSocket {
     this.socket.onmessage = (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data);
-        if (this.onMessageReceived) this.onMessageReceived(data);
+        if (this.onMessageReceived){
+          this.response = this.onMessageReceived(data);
+        }
       } catch (e) {
         console.error("Lỗi khi phân tích tin nhắn:", e);
       }
@@ -89,21 +87,6 @@ export class ChatSocket {
   });
 }
 
-//   public waitingForConnecting(timeout = 60000): Promise<void> {
-//   return new Promise((resolve, reject) => {
-//     const timestart = Date.now();
-//     const checkConnection = () => {
-//       if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-//         resolve();
-//       } else if (Date.now() - timestart > timeout) {
-//         reject(new Error("waitingForConnecting: timeout"));
-//       } else {
-//         setTimeout(checkConnection, 500);
-//       }
-//     };
-//     checkConnection();
-//   });
-// }
 
   /**
    * Gửi một tin nhắn đến máy chủ WebSocket.
@@ -144,11 +127,12 @@ export class ChatSocket {
    * @param user Tên người dùng.
    * @param pass Mật khẩu người dùng.
    */
-  public login(user: string, pass: string): void {
+  public login(user: string, pass: string): any {
     this._send("LOGIN", {
       user: user,
       pass: pass,
     });
+    return this.response;
   }
 
   /**

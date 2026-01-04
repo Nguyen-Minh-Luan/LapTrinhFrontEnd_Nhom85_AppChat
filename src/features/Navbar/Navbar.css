@@ -1,0 +1,29 @@
+.navbar {
+    padding: 1em 4rem;
+    background-color: rgba(255, 255, 255, 0.7);
+    margin: 0.7rem 0.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    contain: layout style paint;
+    width: 100%;
+}
+
+.navbar-left {
+    flex-grow: 1;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.navbar-right {
+    flex-grow: 1;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.navbar-center {
+    position: relative;
+    align-self: center;
+    width: auto;
+    margin-top: -1.5em;
+}

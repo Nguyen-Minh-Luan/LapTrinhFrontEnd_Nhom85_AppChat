@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node", // Hoặc "bundler" nếu dùng Vite/Next.js mới
+    "allowJs": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "*": ["node_modules/*", "src/*"],
+    },
+  },
+}

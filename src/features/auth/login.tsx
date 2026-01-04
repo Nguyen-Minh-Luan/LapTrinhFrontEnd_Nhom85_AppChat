@@ -1,77 +1,36 @@
-import React, { useEffect, useState } from 'react';
-import './Login.css';
-import { Link, useNavigate } from 'react-router-dom';
-import { CURRENT_SOCKET } from '../../module/appsocket.ts';
+import React, { use, useEffect, useState } from "react";
+import "./Login.css";
+import { Link, useNavigate } from "react-router-dom";
+import { CURRENT_SOCKET } from "../../module/appsocket";
+import {useAppDispatch,useAppSelector} from "../../hook/customHook"
+import { login } from "../../redux/authSlice";
 
-    const Login = () => {
-      const [showPassword, setShowPassword] = useState(false);
-      const navigate = useNavigate();
-      const [isConnecting, setIsConnecting] = useState(false);
-      const [formData, setFormData] = useState({
-        username: '',
-        password: '',
-        rememberMe: false
-      });
-      const togglePassword = () => {
-        setShowPassword(!showPassword);
-      };
-      const handleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
-          ...prev,
-          [name]: type === 'checkbox' ? checked : value
-        }));
-      };
+const Login = () => {
+  const [showPassword, setShowPassword] = useState(false);
+  const dispatch = useAppDispatch()
+  const state = useAppSelector((state)=>state.auth)
+  const [formData, setFormData] = useState({
+    user: "",
+    pass: "",
+    // rememberMe: false,
+  });
+  const togglePassword = () => {
+    setShowPassword(!showPassword);
+  };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
 
       const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setIsConnecting(true)
-        const login = ()=>{
         console.log('Form submitted:', formData);
-        const {username,password,rememberMe} = formData;
-        CURRENT_SOCKET.login(username,password)
-        }
-
-        if(!CURRENT_SOCKET.isConnect()){
-          await CURRENT_SOCKET.connect(); 
-        }
-
-        login()
-        setIsConnecting(false)
+        await dispatch(login(formData))
       };
       
-      useEffect(()=>{
-         CURRENT_SOCKET.onConnected = () => {
-          console.log("Socket connected");
-        };
-
-        CURRENT_SOCKET.onMessageReceived = (data) => {
-          console.log("Server trả về:", data);
-
-          if (data.event === "LOGIN") {
-            if (data.status === "success") {
-              console.log("Login thành công");
-              navigate("/register")
-            } else {
-              console.log("Login thất bại:", data.message);
-            }
-          }
-        };
-        CURRENT_SOCKET.onError = (e) => {
-          console.error("Socket error", e);
-        };
-
-        CURRENT_SOCKET.onClosed = () => {
-          console.log("Socket closed");
-        };
-        return () => {
-          CURRENT_SOCKET.onConnected = null;
-          CURRENT_SOCKET.onMessageReceived = null;
-          CURRENT_SOCKET.onError = null;
-          CURRENT_SOCKET.onClosed = null;
-        };
-      },[]);
-
       return (
         
         <div className="login-wrapper">
@@ -79,7 +38,7 @@ import { CURRENT_SOCKET } from '../../module/appsocket.ts';
             <h1 className="main-title">Login to App Chat</h1>
 
             <form onSubmit={handleSubmit} className="login-form">
-              {isConnecting && (
+              {state.isLoading && (
               <div className="overlay">
                 <div className="spinner"></div>
                 <p>Đang kết nối...</p>
@@ -89,9 +48,9 @@ import { CURRENT_SOCKET } from '../../module/appsocket.ts';
               <div className="input-group">
                 <input
                   type="text"
-                  name="username"
+                  name="user"
                   placeholder="Username"
-                  value={formData.username}
+                  value={formData.user}
                   onChange={handleChange}
                   required
                 />
@@ -100,9 +59,9 @@ import { CURRENT_SOCKET } from '../../module/appsocket.ts';
               <div className="input-group">
                 <input
                   type={showPassword ? "text" : "password"}
-                  name="password"
+                  name="pass"
                   placeholder="Password"
-                  value={formData.password}
+                  value={formData.pass}
                   onChange={handleChange}
                   required
                 />
@@ -120,7 +79,7 @@ import { CURRENT_SOCKET } from '../../module/appsocket.ts';
               </button>
 
               <div className="form-options">
-                <label className="remember-me">
+                {/* <label className="remember-me">
                   <input
                     type="checkbox"
                     name="rememberMe"
@@ -128,13 +87,13 @@ import { CURRENT_SOCKET } from '../../module/appsocket.ts';
                     onChange={handleChange}
                   />
                   <span>Remember Me</span>
-                </label>
+                </label> */}
                 <Link to={"/register"} className="forgot-password">Sign Up</Link>
               </div>
             </form>
           </div>
         </div>
       );
-    };
+};
 
-    export default Login;
+export default Login;

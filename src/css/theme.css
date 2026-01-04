@@ -1,0 +1,44 @@
+:root {
+    --primary-bg-color: #f5d6e1;
+    --border-radius: 8px;
+    --message-content-bg-color: white;
+    --message-content-owner-bg-color: #f5d6e1;
+    --primary-bg-glass-border: grey;
+    --primary-bg-glass-color: #282828b0;
+    --dropshadow-color: black;
+}
+
+body {
+    font-family: "Noto Sans", sans-serif;
+    margin: 0px;
+    overflow: hidden;
+}
+
+.body.light {
+    --primary-bg-glass-color: #282828b0;
+}
+
+.acrylic-eff {
+    backdrop-filter: blur(15px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(15px) saturate(150%);
+}
+
+.glass-eff {
+    backdrop-filter: blur(15px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(15px) saturate(150%);
+    border: 1px solid var(--primary-bg-glass-border);
+    background-color: var(--primary-bg-glass-color);
+}
+
+.dropshadow {
+    filter: drop-shadow(0px 0px 3px var(--dropshadow-color));
+}
+
+.border-radius {
+    border-radius: var(--border-radius);
+}
+
+.btn {
+    cursor: pointer;
+    border: none;
+}
