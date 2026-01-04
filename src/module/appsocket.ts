@@ -20,18 +20,33 @@ export class ChatSocket {
     this.onClosed = null;
 
   }
+
+
   public isConnect (): boolean{
     if(!this.socket || this.socket.readyState !== WebSocket.OPEN){
       return false
     }
     return true
   }
+
+
+
+  public reconnect () : void{
+    if(!this.isConnect()){
+      this.onMessageReceived = null;
+      this.onConnected = null;
+      this.onError = null;
+      this.onClosed = null;
+      this.connect()
+    }
+  }
+
+
   /**
    * Thiết lập kết nối WebSocket.
    * Đăng ký các hàm xử lý sự kiện khi kết nối mở, nhận tin nhắn, lỗi và đóng.
    */
   public connect(timeout = 60000): Promise<void> {
-  // Nếu socket đã mở thì resolve ngay
   if (this.socket && this.socket.readyState === WebSocket.OPEN) {
     return Promise.resolve();
   }
@@ -68,6 +83,7 @@ export class ChatSocket {
 
     this.socket.onclose = () => {
       clearTimeout(timer);
+      this.reconnect()
       if (this.onClosed) this.onClosed();
     };
   });
