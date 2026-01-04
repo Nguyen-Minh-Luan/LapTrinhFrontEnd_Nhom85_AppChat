@@ -21,4 +21,4 @@ const socketSlice = createSlice({
   },
 });
 
-export default socketSlice
+export default socketSlice.reducer;
