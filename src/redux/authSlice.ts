@@ -71,33 +71,7 @@ export const register = createAsyncThunk('login',async(data:{user:string, pass:s
   return response.data
 
 });
-export const logout = createAsyncThunk('login',async(data:{user:string, pass:string},{rejectWithValue})=>{
-  CURRENT_SOCKET.onMessageReceived = (data) => {
-        console.log("Server trả về:", data);
-        if (data.event === "LOGIN") {
-            if (data.status === "success") {
-                console.log("Login thành công");
-                return data
-            } else {
-                console.log("Login thất bại:", data.message);
-                return data
-            }
-        }
-  };
-  CURRENT_SOCKET.onConnected = ()=>{
-    console.log("Socket Connected");
-  }
-  if(!CURRENT_SOCKET.isConnect()){
-    await CURRENT_SOCKET.connect(); 
-  }
 
-  const response = CURRENT_SOCKET.login(data.user,data.pass);
-  if(!response.data.RE_LOGIN_CODE){
-    return rejectWithValue(response.data.message || "đăng nhập thất bại")
-  }
-  return response.data
-
-});
 const authSlice = createSlice({
   name: 'auth',
   initialState,
