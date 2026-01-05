@@ -1,9 +1,9 @@
-import React, { use, useEffect, useState } from "react";
+import React, {useEffect, useState } from "react";
 import "./Login.css";
 import { Link, useNavigate } from "react-router-dom";
 import { CURRENT_SOCKET } from "../../module/appsocket";
 import {useAppDispatch,useAppSelector} from "../../hook/customHook"
-import { login } from "../../redux/authSlice";
+import { login} from "../../redux/authSlice";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -30,7 +30,27 @@ const Login = () => {
         console.log('Form submitted:', formData);
         await dispatch(login(formData))
       };
-      
+    useEffect(()=>{
+        CURRENT_SOCKET.onConnected = ()=>{
+          console.log("Socket Connected");
+        }
+        CURRENT_SOCKET.onError = (error)=>{
+          console.error("Socket error", error);
+        }
+        CURRENT_SOCKET.onClosed = ()=>{
+          console.log("Socket Closed");
+        }
+        return ()=>{
+          CURRENT_SOCKET.onConnected = null;
+          CURRENT_SOCKET.onMessageReceived = null;
+          CURRENT_SOCKET.onError = null;
+          CURRENT_SOCKET.onClosed = null;
+
+        }
+    },[])
+    useEffect(()=>{
+      console.log(state.isLoading)
+    },[state.isLoading])
       return (
         
         <div className="login-wrapper">
@@ -44,6 +64,11 @@ const Login = () => {
                 <p>Đang kết nối...</p>
 
               </div>
+              )}
+              {state.error && (
+                <p className="changeInfo">
+                  Sai username và password.
+                </p>
               )}
               <div className="input-group">
                 <input
