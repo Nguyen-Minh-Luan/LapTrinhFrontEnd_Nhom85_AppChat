@@ -115,11 +115,12 @@ export class ChatSocket {
    * @param user Tên người dùng.
    * @param pass Mật khẩu người dùng.
    */
-  public register(user: string, pass: string): void {
+  public register(user: string, pass: string): any {
     this._send("REGISTER", {
       user: user,
       pass: pass,
     });
+    return this.response;
   }
 
   /**
