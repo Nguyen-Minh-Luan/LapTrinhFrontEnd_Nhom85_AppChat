@@ -8,9 +8,9 @@ declare global {
 }
 
 export function TestModule() {
-  CURRENT_SOCKET.onMessageReceived = (data) => {
+  CURRENT_SOCKET.onMessageReceiveds.push((data) => {
     console.log(data);
-  };
+  });
 
   useEffect(() => {
     window.app = {

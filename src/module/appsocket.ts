@@ -1,5 +1,13 @@
 const BASE_URL = "wss://chat.longapp.site/chat/chat";
 
+export const EV_GET_ROOM_CHAT_MES = "GET_ROOM_CHAT_MES";
+
+export interface ChatResponse {
+  event: string;
+  status: string;
+  data: any;
+}
+
 export class ChatSocket {
   isConnect() {
     return true;
@@ -7,8 +15,13 @@ export class ChatSocket {
 
   private url: string;
   private socket: WebSocket | null;
+  public onMessageReceiveds: [(data: ChatResponse) => void | null];
+  /**
+   * @deprecated
+   */
   public onMessageReceived: ((data: any) => void) | null;
   public onConnected: (() => void) | null;
+  public onConnecteds: [(() => void) | null];
   public onError: ((event: Event) => void) | null;
   public onClosed: (() => void) | null;
 
@@ -18,8 +31,9 @@ export class ChatSocket {
   constructor() {
     this.url = BASE_URL;
     this.socket = null;
+    this.onMessageReceiveds = [null];
     this.onMessageReceived = null;
-    this.onConnected = null;
+    this.onConnecteds = [null];
     this.onError = null;
     this.onClosed = null;
     this.connect();
@@ -33,13 +47,24 @@ export class ChatSocket {
     this.socket = new WebSocket(this.url);
 
     this.socket.onopen = () => {
-      if (this.onConnected) this.onConnected();
+      for (var call of this.onConnecteds) {
+        if (call) {
+          call();
+        }
+      }
     };
 
     this.socket.onmessage = (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data);
-        if (this.onMessageReceived) this.onMessageReceived(data);
+        if (this.onMessageReceived) {
+          this.onMessageReceived(data);
+        }
+        for (var call of this.onMessageReceiveds) {
+          if (call) {
+            call(data);
+          }
+        }
       } catch (e) {
         console.error("Lỗi khi phân tích tin nhắn:", e);
       }
