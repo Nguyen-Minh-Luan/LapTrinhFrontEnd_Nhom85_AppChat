@@ -49,7 +49,8 @@ const Register = () => {
       await CURRENT_SOCKET.connect();
     }
     await dispatch(register({user:username,pass:password}));
-    setIsLoading(false)
+    if(state.isRegister)setIsLoading(false)
+    
   };
 
 

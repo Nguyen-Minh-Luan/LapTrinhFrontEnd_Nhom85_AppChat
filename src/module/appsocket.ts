@@ -151,8 +151,9 @@ export class ChatSocket {
   /**
    * Đăng xuất người dùng hiện tại.
    */
-  public logout(): void {
+  public logout(): any {
     this._send("LOGOUT", {});
+    return this.response;
   }
 
   /**

@@ -8,6 +8,7 @@ import { login} from "../../redux/authSlice";
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const dispatch = useAppDispatch()
+  const navigate = useNavigate()
   const state = useAppSelector((state)=>state.auth)
   const [formData, setFormData] = useState({
     user: "",
@@ -29,6 +30,10 @@ const Login = () => {
         e.preventDefault();
         console.log('Form submitted:', formData);
         await dispatch(login(formData))
+        console.log("isLogin = " + state.isLogin);
+        if(state.isLogin){
+          navigate("/home")
+        }
       };
     useEffect(()=>{
         CURRENT_SOCKET.onConnected = ()=>{
@@ -49,8 +54,11 @@ const Login = () => {
         }
     },[])
     useEffect(()=>{
-      console.log(state.isLoading)
+      console.log("login isLoading = " + state.isLoading)
     },[state.isLoading])
+    useEffect(()=>{
+      console.log("login isLogin = " + state.isLogin)
+    },[state.isLogin])
       return (
         
         <div className="login-wrapper">
