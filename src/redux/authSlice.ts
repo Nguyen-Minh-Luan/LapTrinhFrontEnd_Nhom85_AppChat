@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { createSlice, PayloadAction,createAsyncThunk } from '@reduxjs/toolkit';
 import { CURRENT_SOCKET } from "../module/appsocket";
 import { resolve } from "node:dns";
-
+import {encryptToken,decryptToken} from "../module/encryption"
 
 interface AuthenticationState {
    isLoading: boolean | false;
@@ -44,9 +44,9 @@ export const login = createAsyncThunk('login', async(data: {user: string, pass: 
   if(!response.data.RE_LOGIN_CODE){
     return rejectWithValue(response.data.message || "đăng nhập thất bại")
   }
-  
+  const ecryptedToken = await encryptToken(response.data.RE_LOGIN_CODE)
   // Lưu cả username và token
-  localStorage.setItem("RE_LOGIN_CODE", response.data.RE_LOGIN_CODE);
+  localStorage.setItem("RE_LOGIN_CODE", ecryptedToken);
   localStorage.setItem("USERNAME", data.user);
   
   return {
@@ -56,10 +56,10 @@ export const login = createAsyncThunk('login', async(data: {user: string, pass: 
 });
 
 export const reLogin = createAsyncThunk('reLogin', async(_, {rejectWithValue}) => {
-  const token = localStorage.getItem('RE_LOGIN_CODE');
+  const decryptedToken = await decryptToken(localStorage.getItem('RE_LOGIN_CODE'));
   const username = localStorage.getItem('USERNAME');
   
-  if (!token || !username) {
+  if (!decryptedToken || !username) {
     return rejectWithValue("Không tìm thấy thông tin đăng nhập");
   }
 
@@ -79,7 +79,7 @@ export const reLogin = createAsyncThunk('reLogin', async(_, {rejectWithValue}) =
     await CURRENT_SOCKET.connect();
   }
 
-  const response = await CURRENT_SOCKET.reLogin(username, token);
+  const response = await CURRENT_SOCKET.reLogin(username, decryptedToken);
   
   if(response.status !== "success"){
     // Nếu relogin thất bại, xóa token cũ
@@ -87,7 +87,8 @@ export const reLogin = createAsyncThunk('reLogin', async(_, {rejectWithValue}) =
     localStorage.removeItem('USERNAME');
     return rejectWithValue(response.mes || "Phiên đăng nhập hết hạn");
   }
-  localStorage.setItem("RE_LOGIN_CODE",response.data.RE_LOGIN_CODE)
+  const encryptedToken = await encryptToken(response.data.RE_LOGIN_CODE);
+  localStorage.setItem("RE_LOGIN_CODE",encryptedToken)
   return {
     token: response.data.RE_LOGIN_CODE,
     username: username

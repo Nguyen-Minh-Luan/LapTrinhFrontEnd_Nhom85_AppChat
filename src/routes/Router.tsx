@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router";
 import Login from "../features/auth/login";
 import Register from "../features/auth/Register";
-import { MainApp } from "../features/MainChat/MainApp";
+import { MainApp } from "../features/MainApp/MainApp";
 import { useAppDispatch, useAppSelector } from "../hook/customHook";
 import { reLogin } from "../redux/authSlice";
 // import Test from "../module/Test.tsx";
@@ -67,7 +67,6 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   
   return <>{children}</>;
 };
-
 
 
 
