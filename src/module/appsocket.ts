@@ -87,6 +87,49 @@ export class ChatSocket {
   });
 }
 
+private _sendAndWaitResponse(eventName: string,payload: Record<string, any>,expectedEvent: string,timeout = 60000): Promise<any> {
+    return new Promise((resolve, reject) => {
+      if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+        reject(new Error("Socket chưa mở"));
+        return;
+      }
+
+      // Timeout handler
+      const timer = setTimeout(() => {
+        reject(new Error(`Timeout waiting for ${expectedEvent}`));
+      }, timeout);
+
+      // Lưu địa chỉ vùng nhớ của callback cũ
+      const oldCallback = this.onMessageReceived;
+
+      // Set callback ghi đè lên onMessageReceived() bên login asyncThunk để bắt response
+      // onMessageReceived() bên login asyncThunk sẽ không mất vẫn còn tồn tại ở đâu đó, biến oldCallback đã lưu lại địa chỉ của nó
+      this.onMessageReceived = (data) => {
+        // Gọi callback cũ nếu có (để không ảnh hưởng logic khác)
+        if (oldCallback) {
+          oldCallback(data);
+        }
+
+        // Kiểm tra nếu là event mong đợi
+        if (data.event === expectedEvent) {
+          clearTimeout(timer);
+          // 1 lần nữa set callback thành oldCallback (onMessageReceived() bên login asyncThunk) để trả lại logic ban đầu
+          this.onMessageReceived = oldCallback;
+          resolve(data);
+        }
+      };
+
+      const message = {
+        action: "onchat",
+        data: {
+          event: eventName,
+          data: payload,
+        },
+      };
+
+      this.socket.send(JSON.stringify(message));
+    });
+  }
 
   /**
    * Gửi một tin nhắn đến máy chủ WebSocket.
@@ -108,6 +151,7 @@ export class ChatSocket {
     };
 
     this.socket.send(JSON.stringify(message));
+    //công việc send đã kết thúc ngay tại đây (hãy nhìn nó như là 1 return của hàm này)
   }
 
   /**
@@ -115,11 +159,12 @@ export class ChatSocket {
    * @param user Tên người dùng.
    * @param pass Mật khẩu người dùng.
    */
-  public register(user: string, pass: string): any {
-    this._send("REGISTER", {
-      user: user,
-      pass: pass,
-    });
+  public async register (user: string, pass: string): Promise<any> {
+    this.response = await this._sendAndWaitResponse(
+      "REGISTER",
+      { user, pass },
+      "REGISTER"
+    );
     return this.response;
   }
 
@@ -128,11 +173,12 @@ export class ChatSocket {
    * @param user Tên người dùng.
    * @param pass Mật khẩu người dùng.
    */
-  public login(user: string, pass: string): any {
-    this._send("LOGIN", {
-      user: user,
-      pass: pass,
-    });
+  public async login(user: string, pass: string): Promise<any> {
+    this.response = await this._sendAndWaitResponse(
+      "LOGIN",
+      { user, pass },
+      "LOGIN"
+    );
     return this.response;
   }
 

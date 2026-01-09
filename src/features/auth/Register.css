@@ -199,7 +199,8 @@
 }
 
 .changeInfo{
-  color: red;
+  color: rgb(244, 141, 141);
+  font-size: 18px;
 }
 
 

@@ -26,7 +26,7 @@ export const login = createAsyncThunk('login',async(data:{user:string, pass:stri
         console.log("Server trả về:", data);
         if (data.event === "LOGIN") {
             if (data.status === "success") {
-              // console.log("isLogin = " + initialState.isLogin);
+                
                 console.log("Login thành công");
             } else {
                 console.log("Login thất bại: Sai tài khoản mật khẩu", data.mes);
@@ -39,14 +39,12 @@ export const login = createAsyncThunk('login',async(data:{user:string, pass:stri
     await CURRENT_SOCKET.connect();
   }
 
-  if(CURRENT_SOCKET.isConnect()){
-  const response = CURRENT_SOCKET.login(data.user,data.pass);
+  const response = await CURRENT_SOCKET.login(data.user,data.pass);
   if(!response.data.RE_LOGIN_CODE){
     return rejectWithValue(response.data.message || "đăng nhập thất bại")
   }
   localStorage.setItem("RE_LOGIN_CODE",response.data.RE_LOGIN_CODE);
   return response.data
-  }
 });
 
 
@@ -69,11 +67,11 @@ export const register = createAsyncThunk('register',async(data:{user:string,pass
   if(!CURRENT_SOCKET.isConnect()){
     await CURRENT_SOCKET.connect(); 
   }
-  const response = CURRENT_SOCKET.register(data.user,data.pass);
+  const response = await CURRENT_SOCKET.register(data.user,data.pass);
   if(response.event === "REGISTER" && response.mes === "User already exists!"){
-    return rejectWithValue(response.data.message || "đăng ký thất bại")
+    return rejectWithValue(response.mes || "đăng ký thất bại")
   }
-  return response.data;
+  return response;
 });
 
 
@@ -98,10 +96,10 @@ export const logout = createAsyncThunk('logout',async({},{rejectWithValue})=>{
   }
   const response = CURRENT_SOCKET.logout();
   if(response.event === "LOGOUT" && response.status !== "success"){
-    return rejectWithValue(response.data.message || "đăng xuất thất bại")
+    return rejectWithValue(response.mes || "đăng xuất thất bại")
   }
   localStorage.removeItem('RE_LOGIN_CODE')
-  return response.data;
+  return response;
 });
 
 export const resetAuth = () =>{
@@ -119,18 +117,18 @@ const authSlice = createSlice({
         .addCase(login.pending,(state)=>{
             state.error = null;
             state.isLoading=true;
-            console.log("pending :" + state.isLogin)
+            console.log("pending :")
         })
         .addCase(login.rejected,(state,action)=>{
             state.error = action.payload as string;
             state.isLoading=false;
-            console.log("rejected :" + state.isLogin)
+            console.log("rejected :")
         })
         .addCase(login.fulfilled,(state,action)=>{
             state.error = null;
             state.isLoading=false;
             state.isLogin=true;
-            console.log("fulfilled :" + state.isLogin)
+            console.log("fulfilled :")
             state.token = action.payload.RE_LOGIN_CODE;
         })
         .addCase(register.pending,(state)=>{
@@ -139,6 +137,7 @@ const authSlice = createSlice({
         })
         .addCase(register.rejected,(state,action)=>{
             state.error = action.payload as string;
+            console.log("rejected error : " + action.payload)
             state.isLoading=false;
         })
         .addCase(register.fulfilled,(state,action)=>{
@@ -155,10 +154,7 @@ const authSlice = createSlice({
             state.isLoading=false;
         })
         .addCase(logout.fulfilled,(state)=>{
-            state.error = null;
-            state.isLoading = false;
-            state.isLogout = true;
-            state.isLogin = false;
+            resetAuth()
             state.token = null;
         })
 
