@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from "react";
 import "./Register.css";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router-dom";
 import { CURRENT_SOCKET } from "../../module/appsocket";
+import {useAppDispatch,useAppSelector} from "../../hook/customHook"
+import { register} from "../../redux/authSlice";
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const [isRegister, setIsRegister] = useState(false);
+  const dispatch = useAppDispatch()
+  const state = useAppSelector((state)=>state.auth);
+  console.log(state.error)
+  const [isLoading, setIsLoading] = useState(false);
   const [changeInfo, setChangeInfo] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -27,6 +32,10 @@ const Register = () => {
     }));
   };
 
+
+
+
+  
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -34,31 +43,21 @@ const Register = () => {
       alert("Passwords do not match!");
       return;
     }
-    setIsRegister(true);
     const { username, email, password, confirmPassword } = formData;
-
+    // setIsLoading(true)
     if (!CURRENT_SOCKET.isConnect()) {
       await CURRENT_SOCKET.connect();
     }
-    CURRENT_SOCKET.register(username, password);
+    await dispatch(register({user:username,pass:password}));
+    // if(state.isRegister)setIsLoading(false)
+    
   };
+
+
+
   useEffect(() => {
     CURRENT_SOCKET.onConnected = () => {
       console.log("Socket connected");
-    };
-
-    CURRENT_SOCKET.onMessageReceived = (data) => {
-      console.log("Socket Message :" + data);
-      if (data.event === "REGISTER") {
-        if (data.status === "success") {
-          setIsRegister(false);
-          navigate("/login");
-        } else {
-          console.log("đăng ký thất bại");
-          setIsRegister(false);
-          setChangeInfo(true);
-        }
-      }
     };
     CURRENT_SOCKET.onError = (e) => {
       console.error("Socket error", e);
@@ -74,13 +73,21 @@ const Register = () => {
       CURRENT_SOCKET.onClosed = null;
     };
   }, []);
-
+  useEffect(() => {
+  console.log("isLoading changed:", state.isLoading);
+}, [state.isLoading]);
   return (
     <div className="login-wrapper">
       <div className="login-container">
         <h1 className="main-title">Register for App Chat</h1>
 
         <form onSubmit={handleSubmit} className="login-form">
+          {state.isLoading && (
+            <div className="overlay">
+              <div className="spinner"></div>
+              <p color="red">Đang tạo tài khoản ...</p>
+            </div>
+          )}
           <div className="input-group">
             <input
               type="text"
@@ -127,15 +134,9 @@ const Register = () => {
               required
             />
           </div>
-          {isRegister && (
-            <div className="overlay">
-              <div className="spinner"></div>
-              <p color="red">Đang tạo tài khoản ...</p>
-            </div>
-          )}
-          {changeInfo && (
+          {state.error && (
             <p className="changeInfo">
-              Tài khoản đã tồn tại vui lòng đổi username hoặc mật khẩu
+              Tài khoản đã tồn tại vui lòng đổi <br></br>USERNAME hoặc PASSWORD
             </p>
           )}
           <button type="submit" className="signin-btn">
