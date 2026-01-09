@@ -187,11 +187,13 @@ private _sendAndWaitResponse(eventName: string,payload: Record<string, any>,expe
    * @param user Tên người dùng.
    * @param code Mã đăng nhập lại.
    */
-  public reLogin(user: string, code: string): void {
-    this._send("RE LOGIN", {
-      user: user,
-      code: code,
-    });
+  public async reLogin(user: string, code: string): Promise<any> {
+    this.response = await this._sendAndWaitResponse(
+      "RE_LOGIN",
+      { user, code },
+      "RE_LOGIN",
+    );
+    return this.response;
   }
 
   /**
