@@ -30,12 +30,9 @@ const Login = () => {
         e.preventDefault();
         console.log('Form submitted:', formData);
         await dispatch(login(formData))
-        console.log("isLogin = " + state.isLogin);
-        if(state.isLogin){
-          navigate("/home")
-        }
       };
     useEffect(()=>{
+      
         CURRENT_SOCKET.onConnected = ()=>{
           console.log("Socket Connected");
         }
@@ -58,6 +55,10 @@ const Login = () => {
     },[state.isLoading])
     useEffect(()=>{
       console.log("login isLogin = " + state.isLogin)
+      if(state.isLogin){
+        console.log("đã vào được và sẽ navigate tới /home")
+        navigate("/home")
+      }
     },[state.isLogin])
       return (
         
