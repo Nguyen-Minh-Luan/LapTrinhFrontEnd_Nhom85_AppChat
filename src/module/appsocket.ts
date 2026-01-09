@@ -213,11 +213,13 @@ export class ChatSocket {
    * @param user Tên người dùng.
    * @param code Mã đăng nhập lại.
    */
-  public reLogin(user: string, code: string): void {
-    this._send("RE_LOGIN", {
-      user: user,
-      code: code,
-    });
+  public async reLogin(user: string, code: string): Promise<any> {
+    this.response = await this._sendAndWaitResponse(
+      "RE_LOGIN",
+      { user, code },
+      "RE_LOGIN",
+    );
+    return this.response;
   }
 
   /**

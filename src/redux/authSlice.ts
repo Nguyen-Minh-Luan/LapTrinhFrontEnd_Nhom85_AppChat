@@ -5,28 +5,29 @@ import { resolve } from "node:dns";
 
 
 interface AuthenticationState {
-   isLoading:boolean | false;
-   error:string | null;
+   isLoading: boolean | false;
+   error: string | null;
    token: string | null;
+   username: string | null;
    isLogin: boolean | false;
    isRegister: boolean | false;
    isLogout: boolean | false; 
 }
-const initialState: AuthenticationState = {
-    isLoading:false,
-    error:null,
-    token: localStorage.getItem('RE_LOGIN_CODE') || null,
-    isLogin:false,
-    isRegister:false,
-    isLogout: false,
 
+const initialState: AuthenticationState = {
+    isLoading: false,
+    error: null,
+    token: localStorage.getItem('RE_LOGIN_CODE') || null,
+    username: localStorage.getItem('USERNAME') || null,
+    isLogin: false,
+    isRegister: false,
+    isLogout: false,
 }
-export const login = createAsyncThunk('login',async(data:{user:string, pass:string},{rejectWithValue})=>{
+export const login = createAsyncThunk('login', async(data: {user: string, pass: string}, {rejectWithValue}) => {
   CURRENT_SOCKET.onMessageReceived = (data) => {
         console.log("Server trả về:", data);
         if (data.event === "LOGIN") {
             if (data.status === "success") {
-                
                 console.log("Login thành công");
             } else {
                 console.log("Login thất bại: Sai tài khoản mật khẩu", data.mes);
@@ -39,19 +40,63 @@ export const login = createAsyncThunk('login',async(data:{user:string, pass:stri
     await CURRENT_SOCKET.connect();
   }
 
-  const response = await CURRENT_SOCKET.login(data.user,data.pass);
+  const response = await CURRENT_SOCKET.login(data.user, data.pass);
   if(!response.data.RE_LOGIN_CODE){
     return rejectWithValue(response.data.message || "đăng nhập thất bại")
   }
-  localStorage.setItem("RE_LOGIN_CODE",response.data.RE_LOGIN_CODE);
-  return response.data
+  
+  // Lưu cả username và token
+  localStorage.setItem("RE_LOGIN_CODE", response.data.RE_LOGIN_CODE);
+  localStorage.setItem("USERNAME", data.user);
+  
+  return {
+    token: response.data.RE_LOGIN_CODE,
+    username: data.user
+  };
 });
 
+export const reLogin = createAsyncThunk('reLogin', async(_, {rejectWithValue}) => {
+  const token = localStorage.getItem('RE_LOGIN_CODE');
+  const username = localStorage.getItem('USERNAME');
+  
+  if (!token || !username) {
+    return rejectWithValue("Không tìm thấy thông tin đăng nhập");
+  }
 
-export const register = createAsyncThunk('register',async(data:{user:string,pass:string},{rejectWithValue})=>{
   CURRENT_SOCKET.onMessageReceived = (data) => {
-      console.log("Socket Message :" + 'event :' + data.event+ ',status :' + data.status + ',mes :' + data.mes
-       );
+    console.log("ReLogin - Server trả về:", data);
+    if (data.event === "RE_LOGIN") {
+      if (data.status === "success") {
+        console.log("ReLogin thành công");
+      } else {
+        console.log("ReLogin thất bại", data.mes);
+      }
+      return data;
+    }
+  };
+
+  if(!CURRENT_SOCKET.isConnect()){
+    await CURRENT_SOCKET.connect();
+  }
+
+  const response = await CURRENT_SOCKET.reLogin(username, token);
+  
+  if(response.status !== "success"){
+    // Nếu relogin thất bại, xóa token cũ
+    localStorage.removeItem('RE_LOGIN_CODE');
+    localStorage.removeItem('USERNAME');
+    return rejectWithValue(response.mes || "Phiên đăng nhập hết hạn");
+  }
+  localStorage.setItem("RE_LOGIN_CODE",response.data.RE_LOGIN_CODE)
+  return {
+    token: response.data.RE_LOGIN_CODE,
+    username: username
+  };
+});
+
+export const register = createAsyncThunk('register', async(data: {user: string, pass: string}, {rejectWithValue}) => {
+  CURRENT_SOCKET.onMessageReceived = (data) => {
+      console.log("Socket Message :" + 'event :' + data.event + ',status :' + data.status + ',mes :' + data.mes);
       if (data.event === "REGISTER") {
         if (data.status === "success") {
           console.log("đăng ký thành công");
@@ -61,24 +106,28 @@ export const register = createAsyncThunk('register',async(data:{user:string,pass
         return data;
       }
   };
-  CURRENT_SOCKET.onConnected = ()=>{
+  
+  CURRENT_SOCKET.onConnected = () => {
     console.log("Socket Connected");
   }
+  
   if(!CURRENT_SOCKET.isConnect()){
     await CURRENT_SOCKET.connect(); 
   }
-  const response = await CURRENT_SOCKET.register(data.user,data.pass);
+  
+  const response = await CURRENT_SOCKET.register(data.user, data.pass);
+  
   if(response.event === "REGISTER" && response.mes === "User already exists!"){
     return rejectWithValue(response.mes || "đăng ký thất bại")
   }
+  
   return response;
 });
 
 
-export const logout = createAsyncThunk('logout',async({},{rejectWithValue})=>{
+export const logout = createAsyncThunk('logout', async(_, {rejectWithValue}) => {
   CURRENT_SOCKET.onMessageReceived = (data) => {
-      console.log("Socket Message :" + 'event :' + data.event+ ',status :' + data.status + ',mes :' + data.mes
-       );
+      console.log("Socket Message :" + 'event :' + data.event + ',status :' + data.status + ',mes :' + data.mes);
       if (data.event === "LOGOUT") {
         if (data.status === "success") {
           console.log("đăng xuất thành công");
@@ -88,7 +137,7 @@ export const logout = createAsyncThunk('logout',async({},{rejectWithValue})=>{
         return data;
       }
   };
-  CURRENT_SOCKET.onConnected = ()=>{
+  CURRENT_SOCKET.onConnected = () => {
     console.log("Socket Connected");
   }
   if(!CURRENT_SOCKET.isConnect()){
@@ -98,7 +147,9 @@ export const logout = createAsyncThunk('logout',async({},{rejectWithValue})=>{
   if(response.event === "LOGOUT" && response.status !== "success"){
     return rejectWithValue(response.mes || "đăng xuất thất bại")
   }
-  localStorage.removeItem('RE_LOGIN_CODE')
+  localStorage.removeItem('RE_LOGIN_CODE');
+  localStorage.removeItem('USERNAME');
+  
   return response;
 });
 
@@ -114,6 +165,7 @@ const authSlice = createSlice({
   },
   extraReducers: (builder)=>{
     builder
+        // Login
         .addCase(login.pending,(state)=>{
             state.error = null;
             state.isLoading=true;
@@ -129,8 +181,31 @@ const authSlice = createSlice({
             state.isLoading=false;
             state.isLogin=true;
             console.log("fulfilled :")
-            state.token = action.payload.RE_LOGIN_CODE;
+            state.token = action.payload.token;
+            state.username = action.payload.username;
+            console.log(state.username);
         })
+        // ReLogin
+        .addCase(reLogin.pending, (state) => {
+            state.error = null;
+            state.isLoading = true;
+        })
+        .addCase(reLogin.rejected, (state, action) => {
+            state.error = action.payload as string;
+            state.isLoading = false;
+            state.isLogin = false;
+            state.token = null;
+            state.username = null;
+        })
+        .addCase(reLogin.fulfilled, (state, action) => {
+            state.error = null;
+            state.isLoading = false;
+            state.isLogin = true;
+            state.token = action.payload.token;
+            state.username = action.payload.username;
+            console.log(state.token)
+        })
+        // Register
         .addCase(register.pending,(state)=>{
             state.error = null;
             state.isLoading=true;
@@ -145,6 +220,7 @@ const authSlice = createSlice({
             state.isLoading=false;
             state.isRegister=true;
         })
+        // Logout
         .addCase(logout.pending,(state)=>{
             state.error = null;
             state.isLoading=true;
@@ -154,8 +230,12 @@ const authSlice = createSlice({
             state.isLoading=false;
         })
         .addCase(logout.fulfilled,(state)=>{
-            resetAuth()
+            state.error = null;
+            state.isLoading = false;
+            state.isLogin = false;
+            state.isLogout = true;
             state.token = null;
+            state.username = null;
         })
 
   }
