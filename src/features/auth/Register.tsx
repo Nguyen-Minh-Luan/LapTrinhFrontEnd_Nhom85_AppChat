@@ -27,6 +27,10 @@ const Register = () => {
     }));
   };
 
+
+
+
+  
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -42,6 +46,14 @@ const Register = () => {
     }
     CURRENT_SOCKET.register(username, password);
   };
+
+
+
+
+
+
+
+
   useEffect(() => {
     CURRENT_SOCKET.onConnected = () => {
       console.log("Socket connected");
