@@ -15,26 +15,46 @@ const sidebarSlice = createSlice({
   initialState,
   reducers: {
     setUserList: (state, action) => {
-      const newList = action.payload.map((newUser: any) => {
+      state.userList = action.payload.map((newUser: any) => {
         const oldUser = state.userList.find(u => u.name === newUser.name);
-        return oldUser ? { ...newUser, lastMes: oldUser.lastMes } : newUser;
+        return {
+          ...newUser,
+          lastMes: oldUser?.lastMes || "",
+          unreadCount: oldUser?.unreadCount || 0,
+          isUnread: oldUser?.isUnread || false
+        };
       });
-      state.userList = newList;
     },
+
     setActiveChat: (state, action) => {
       state.activeChat = action.payload;
+      const index = state.userList.findIndex(u => u.name === action.payload.name);
+      if (index !== -1) {
+        state.userList[index].unreadCount = 0;
+        state.userList[index].isUnread = false;
+      }
     },
-    updateLastMessage: (state, action: PayloadAction<{ name: string; mes: string }>) => {
-  const index = state.userList.findIndex(
-    (u) => u.name.trim() === action.payload.name.trim()
-  );
-  if (index !== -1) {
-    state.userList[index] = {
-      ...state.userList[index],
-      lastMes: action.payload.mes
-    };
-  }
-}
+
+    updateLastMessage: (state, action: PayloadAction<{ name: string; mes: string; isRealtime: boolean }>) => {
+      const { name, mes, isRealtime } = action.payload;
+      const index = state.userList.findIndex((u) => u.name.trim() === name.trim());
+
+      if (index !== -1) {
+        const isCurrentlyActive = state.activeChat?.name === name;
+
+        state.userList[index].lastMes = mes;
+
+        if (isRealtime && !isCurrentlyActive) {
+          state.userList[index].unreadCount = (state.userList[index].unreadCount || 0) + 1;
+          state.userList[index].isUnread = true;
+        } 
+        
+        if (isCurrentlyActive) {
+          state.userList[index].unreadCount = 0;
+          state.userList[index].isUnread = false;
+        }
+      }
+    }
   },
 });
 
