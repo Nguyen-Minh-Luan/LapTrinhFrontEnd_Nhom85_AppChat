@@ -21,22 +21,25 @@
 
 .search-input {
   width: 100%;
-  padding: 12px 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background-color: #2b2d31;
-  color: #ffffff;
-  font-size: 14px;
+  padding: 10px 15px;
+  border-radius: 20px;
+  border: 1px solid #ddd;
+  margin: 10px 0;
   outline: none;
-  transition: all 0.3s ease;
+  transition: 0.3s;
 }
 
 .search-input:focus {
-  background-color: #1e1f22;
   border-color: #0084ff;
-  box-shadow: 0 0 0 2px rgba(0, 132, 255, 0.2);
+  box-shadow: 0 0 5px rgba(0, 132, 255, 0.2);
 }
 
+.no-result {
+  text-align: center;
+  color: #888;
+  margin-top: 20px;
+  font-style: italic;
+}
 .sidebar-list {
   flex: 1;
   overflow-y: auto;
@@ -144,4 +147,37 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.sidebar-item.has-unread {
+  background-color: #f0f7ff;
+}
+
+.item-name.bold {
+  font-weight: 700;
+  color: #000;
+}
+
+.last-message.highlight {
+  font-weight: 600;
+  color: #0084ff;
+}
+
+.content-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.unread-badge {
+  background-color: #ff3b30;
+  color: white;
+  font-size: 11px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
 }
