@@ -53,7 +53,7 @@ export class ChatSocket {
    * Thiết lập kết nối WebSocket.
    * Đăng ký các hàm xử lý sự kiện khi kết nối mở, nhận tin nhắn, lỗi và đóng.
    */
-  public connect(timeout = 60000): Promise<void> {
+  public connect(timeout = 3600000): Promise<void> {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       return Promise.resolve();
     }
@@ -112,7 +112,7 @@ export class ChatSocket {
     eventName: string,
     payload: Record<string, any>,
     expectedEvent: string,
-    timeout = 60000,
+    timeout = 3600000,
   ): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
