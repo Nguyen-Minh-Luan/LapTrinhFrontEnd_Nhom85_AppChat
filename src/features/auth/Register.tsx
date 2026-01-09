@@ -44,12 +44,12 @@ const Register = () => {
       return;
     }
     const { username, email, password, confirmPassword } = formData;
-    setIsLoading(true)
+    // setIsLoading(true)
     if (!CURRENT_SOCKET.isConnect()) {
       await CURRENT_SOCKET.connect();
     }
     await dispatch(register({user:username,pass:password}));
-    if(state.isRegister)setIsLoading(false)
+    // if(state.isRegister)setIsLoading(false)
     
   };
 
@@ -82,16 +82,11 @@ const Register = () => {
         <h1 className="main-title">Register for App Chat</h1>
 
         <form onSubmit={handleSubmit} className="login-form">
-          {isLoading && (
+          {state.isLoading && (
             <div className="overlay">
               <div className="spinner"></div>
               <p color="red">Đang tạo tài khoản ...</p>
             </div>
-          )}
-          {state.error && (
-            <p className="changeInfo">
-              Tài khoản đã tồn tại vui lòng đổi username hoặc mật khẩu
-            </p>
           )}
           <div className="input-group">
             <input
@@ -139,7 +134,11 @@ const Register = () => {
               required
             />
           </div>
-          
+          {state.error && (
+            <p className="changeInfo">
+              Tài khoản đã tồn tại vui lòng đổi <br></br>USERNAME hoặc PASSWORD
+            </p>
+          )}
           <button type="submit" className="signin-btn">
             SIGN UP
           </button>
