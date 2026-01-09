@@ -14,39 +14,52 @@ export const Sidebar: React.FC = () => {
 
     CURRENT_SOCKET.onMessageReceived = (data: any) => {
       if (data.status === "success") {
-        // 1. Nhận danh sách người dùng/nhóm ban đầu
+        
         if (data.event === "GET_USER_LIST") {
           dispatch(setUserList(data.data));
-          // Tự động kéo tin nhắn cũ để hiện Last Message
           data.data.forEach((item: any) => {
             if (item.type === 1) CURRENT_SOCKET.getRoomChatMes(item.name);
             else CURRENT_SOCKET.getPeopleChatMes(item.name);
           });
         }
 
-        // 2. Xử lý tin nhắn NHÓM (Dữ liệu nằm trong data.data.chatData)
         if (data.event === "GET_ROOM_CHAT_MES") {
           const groupInfo = data.data; 
           const chatData = groupInfo.chatData;
           if (chatData && chatData.length > 0) {
-            const newest = chatData[0]; // Tin nhắn "sd"
+            const newest = chatData[0];
             dispatch(updateLastMessage({
-              name: groupInfo.name, // "group85 2025-2026"
-              mes: `${newest.name}: ${newest.mes}` // Hiển thị "22130193: sd"
+              name: groupInfo.name, 
+              mes: `${newest.name}: ${newest.mes}`
             }));
           }
         }
 
-        // 3. Xử lý tin nhắn CÁ NHÂN (Dữ liệu nằm trực tiếp trong data.data)
         if (data.event === "GET_PEOPLE_CHAT_MES") {
           const messages = data.data;
           if (messages && messages.length > 0) {
             const newest = messages[0];
-            // Partner là người mình đang chat cùng (to hoặc name)
             const partnerName = (newest.to === "22130193") ? newest.name : newest.to;
             dispatch(updateLastMessage({
               name: partnerName,
               mes: newest.mes
+            }));
+          }
+        }
+
+        if (data.event === "CHAT" || data.event === "SEND_CHAT") {
+          const newMes = data.data;
+          
+          if (newMes.type === 1) {
+            dispatch(updateLastMessage({
+              name: newMes.to,
+              mes: `${newMes.name}: ${newMes.mes}`
+            }));
+          } else {
+            const partnerName = (newMes.name === "22130193") ? newMes.to : newMes.name;
+            dispatch(updateLastMessage({
+              name: partnerName,
+              mes: newMes.mes
             }));
           }
         }
@@ -97,7 +110,7 @@ export const Sidebar: React.FC = () => {
                   </span>
                 </div>
                 <span className="item-time">
-                  {item.actionTime?.split(" ")[1]?.substring(0, 5) || "10:00"}
+                  {item.actionTime?.split(" ")[1]?.substring(0, 5) || "Vừa xong"}
                 </span>
               </div>
               <div className="content-bottom">
