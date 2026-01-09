@@ -1,11 +1,23 @@
-
 const BASE_URL = "wss://chat.longapp.site/chat/chat";
+
+export const EV_GET_ROOM_CHAT_MES = "GET_ROOM_CHAT_MES";
+
+export interface ChatResponse {
+  event: string;
+  status: string;
+  data: any;
+}
 
 export class ChatSocket {
   private url: string;
   private socket: WebSocket | null;
+  public onMessageReceiveds: [(data: ChatResponse) => void | null];
+  /**
+   * @deprecated
+   */
   public onMessageReceived: ((data: any) => void) | null;
   public onConnected: (() => void) | null;
+  public onConnecteds: [(() => void) | null];
   public onError: ((event: Event) => void) | null;
   public onClosed: (() => void) | null;
   public response: any;
@@ -16,25 +28,24 @@ export class ChatSocket {
   constructor() {
     this.url = BASE_URL;
     this.socket = null;
+    this.onMessageReceiveds = [null];
     this.onMessageReceived = null;
-    this.onConnected = null;
+    this.onConnecteds = [null];
     this.onError = null;
     this.onClosed = null;
-    this.response=null;
+    this.response = null;
   }
 
-  public isConnect (): boolean{
-    if(!this.socket || this.socket.readyState !== WebSocket.OPEN){
-      return false
+  public isConnect(): boolean {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      return false;
     }
-    return true
+    return true;
   }
 
-
-
-  public reconnect () : void{
-    if(!this.isConnect()){
-      this.connect()
+  public reconnect(): void {
+    if (!this.isConnect()) {
+      this.connect();
     }
   }
 
@@ -43,51 +54,66 @@ export class ChatSocket {
    * Đăng ký các hàm xử lý sự kiện khi kết nối mở, nhận tin nhắn, lỗi và đóng.
    */
   public connect(timeout = 60000): Promise<void> {
-  if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-    return Promise.resolve();
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+      this.socket = new WebSocket(this.url);
+
+      const timer = setTimeout(() => {
+        reject(new Error("Connect timeout"));
+      }, timeout);
+
+      this.socket.onopen = () => {
+        for (var call of this.onConnecteds) {
+          if (call) {
+            call();
+          }
+        }
+        clearTimeout(timer);
+        console.log("onopen, readyState:", this.socket?.readyState);
+        if (this.onConnected) this.onConnected();
+        resolve();
+      };
+
+      this.socket.onerror = (error: Event) => {
+        clearTimeout(timer);
+        console.error("Lỗi WebSocket:", error);
+        if (this.onError) this.onError(error);
+        reject(error);
+      };
+
+      this.socket.onmessage = (event: MessageEvent) => {
+        try {
+          const data = JSON.parse(event.data);
+          for (var call of this.onMessageReceiveds) {
+            if (call) {
+              call(data);
+            }
+          }
+          if (this.onMessageReceived) {
+            this.response = this.onMessageReceived(data);
+          }
+        } catch (e) {
+          console.error("Lỗi khi phân tích tin nhắn:", e);
+        }
+      };
+
+      this.socket.onclose = () => {
+        clearTimeout(timer);
+        this.reconnect();
+        if (this.onClosed) this.onClosed();
+      };
+    });
   }
 
-  return new Promise((resolve, reject) => {
-    this.socket = new WebSocket(this.url);
-
-    const timer = setTimeout(() => {
-      reject(new Error("Connect timeout"));
-    }, timeout);
-
-    this.socket.onopen = () => {
-      clearTimeout(timer);
-      console.log("onopen, readyState:", this.socket?.readyState);
-      if (this.onConnected) this.onConnected();
-      resolve();
-    };
-
-    this.socket.onerror = (error: Event) => {
-      clearTimeout(timer);
-      console.error("Lỗi WebSocket:", error);
-      if (this.onError) this.onError(error);
-      reject(error);
-    };
-
-    this.socket.onmessage = (event: MessageEvent) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (this.onMessageReceived){
-          this.response = this.onMessageReceived(data);
-        }
-      } catch (e) {
-        console.error("Lỗi khi phân tích tin nhắn:", e);
-      }
-    };
-
-    this.socket.onclose = () => {
-      clearTimeout(timer);
-      this.reconnect()
-      if (this.onClosed) this.onClosed();
-    };
-  });
-}
-
-private _sendAndWaitResponse(eventName: string,payload: Record<string, any>,expectedEvent: string,timeout = 60000): Promise<any> {
+  private _sendAndWaitResponse(
+    eventName: string,
+    payload: Record<string, any>,
+    expectedEvent: string,
+    timeout = 60000,
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
         reject(new Error("Socket chưa mở"));
@@ -159,11 +185,11 @@ private _sendAndWaitResponse(eventName: string,payload: Record<string, any>,expe
    * @param user Tên người dùng.
    * @param pass Mật khẩu người dùng.
    */
-  public async register (user: string, pass: string): Promise<any> {
+  public async register(user: string, pass: string): Promise<any> {
     this.response = await this._sendAndWaitResponse(
       "REGISTER",
       { user, pass },
-      "REGISTER"
+      "REGISTER",
     );
     return this.response;
   }
@@ -177,7 +203,7 @@ private _sendAndWaitResponse(eventName: string,payload: Record<string, any>,expe
     this.response = await this._sendAndWaitResponse(
       "LOGIN",
       { user, pass },
-      "LOGIN"
+      "LOGIN",
     );
     return this.response;
   }
@@ -219,7 +245,7 @@ private _sendAndWaitResponse(eventName: string,payload: Record<string, any>,expe
    * @param roomName Tên của phòng chat cần tham gia.
    */
   public joinRoom(roomName: string): void {
-    this._send("JOIN ROOM", {
+    this._send("JOIN_ROOM", {
       name: roomName,
     });
   }

@@ -3,6 +3,7 @@ import "./css/styles.css";
 import "./css/theme.css";
 import { BrowserRouter } from "react-router";
 import Router from "./routes/Router";
+import { TestModule } from "./features/test/TestModule";
 import { Provider } from "react-redux";
 import { store } from "./redux/store";
 
@@ -13,6 +14,7 @@ root.render(
   <Provider store={store}>
   <BrowserRouter>
     <Router />
+    <TestModule />
   </BrowserRouter>,
   </Provider>
 );

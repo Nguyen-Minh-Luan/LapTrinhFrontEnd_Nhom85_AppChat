@@ -8,12 +8,13 @@ declare global {
 }
 
 export function TestModule() {
-  CURRENT_SOCKET.onMessageReceived = (data) => {
+  CURRENT_SOCKET.onMessageReceiveds.push((data) => {
     console.log(data);
-  };
+  });
 
   useEffect(() => {
     window.app = {
+      CURRENT_SOCKET: CURRENT_SOCKET,
       login: (username: string, password: string) => {
         CURRENT_SOCKET.login(username, password);
       },
@@ -27,7 +28,7 @@ export function TestModule() {
         CURRENT_SOCKET.joinRoom(roomName);
       },
       getRoomChatMes: (roomName: string) => {
-        CURRENT_SOCKET.joinRoom(roomName);
+        CURRENT_SOCKET.getRoomChatMes(roomName);
       },
       sendChatToRoom: (roomName: string, mess: string) => {
         CURRENT_SOCKET.sendChatToRoom(roomName, mess);

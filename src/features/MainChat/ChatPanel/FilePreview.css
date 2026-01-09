@@ -1,0 +1,42 @@
+.preview-zone {
+    padding: 3px;
+    background-color: var(--primary-bg-color);
+    position: relative;
+}
+
+.preview-item {
+    max-width: 150px;
+    height: 150px;
+    border-radius: 4px;
+}
+
+.preview-img {
+    object-fit: cover;
+    object-position: center;
+}
+
+.status-text {
+    color: #666;
+    font-style: italic;
+}
+
+.remove-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: #ff4d4f;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    z-index: 10; /* Đảm bảo nút luôn nổi lên trên ảnh/video */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background 0.2s;
+}
