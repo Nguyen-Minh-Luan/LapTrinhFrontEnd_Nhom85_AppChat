@@ -10,20 +10,28 @@ const initialState: SidebarState = {
   activeChat: null,
 };
 
+const getTimestamp = (timeStr: string | undefined) => {
+  if (!timeStr) return 0;
+  return new Date(timeStr.replace(/-/g, "/")).getTime();
+};
+
 const sidebarSlice = createSlice({
   name: 'sidebar',
   initialState,
   reducers: {
     setUserList: (state, action) => {
-      state.userList = action.payload.map((newUser: any) => {
+      const newList = action.payload.map((newUser: any) => {
         const oldUser = state.userList.find(u => u.name === newUser.name);
         return {
           ...newUser,
-          lastMes: oldUser?.lastMes || "",
+          lastMes: oldUser?.lastMes || newUser.lastMes || "",
           unreadCount: oldUser?.unreadCount || 0,
-          isUnread: oldUser?.isUnread || false
+          isUnread: oldUser?.isUnread || false,
+          actionTime: oldUser?.actionTime || newUser.actionTime || ""
         };
       });
+
+      state.userList = newList.sort((a, b) => getTimestamp(b.actionTime) - getTimestamp(a.actionTime));
     },
 
     setActiveChat: (state, action) => {
@@ -35,26 +43,34 @@ const sidebarSlice = createSlice({
       }
     },
 
-    updateLastMessage: (state, action: PayloadAction<{ name: string; mes: string; isRealtime: boolean }>) => {
-      const { name, mes, isRealtime } = action.payload;
-      const index = state.userList.findIndex((u) => u.name.trim() === name.trim());
+    updateLastMessage: (state, action: PayloadAction<{ name: string; mes: string; isRealtime: boolean; actionTime?: string }>) => {
+  const { name, mes, isRealtime, actionTime } = action.payload;
 
-      if (index !== -1) {
-        const isCurrentlyActive = state.activeChat?.name === name;
+  const index = state.userList.findIndex(
+    (u) => u.name.trim().toLowerCase() === name.trim().toLowerCase()
+  );
 
-        state.userList[index].lastMes = mes;
+  if (index !== -1) {
+    const updatedUser = {
+      ...state.userList[index],
+      lastMes: mes,
+      actionTime: actionTime || state.userList[index].actionTime 
+    };
 
-        if (isRealtime && !isCurrentlyActive) {
-          state.userList[index].unreadCount = (state.userList[index].unreadCount || 0) + 1;
-          state.userList[index].isUnread = true;
-        } 
-        
-        if (isCurrentlyActive) {
-          state.userList[index].unreadCount = 0;
-          state.userList[index].isUnread = false;
-        }
-      }
+    if (isRealtime && state.activeChat?.name !== updatedUser.name) {
+      updatedUser.isUnread = true;
+      updatedUser.unreadCount = (updatedUser.unreadCount || 0) + 1;
     }
+
+    const remainingUsers = state.userList.filter((_, i) => i !== index);
+    
+    state.userList = [updatedUser, ...remainingUsers];
+
+    if (!isRealtime) {
+      state.userList.sort((a, b) => getTimestamp(b.actionTime) - getTimestamp(a.actionTime));
+    }
+  }
+}
   },
 });
 
