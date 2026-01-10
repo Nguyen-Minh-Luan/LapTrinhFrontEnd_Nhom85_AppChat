@@ -35,26 +35,30 @@ const sidebarSlice = createSlice({
       }
     },
 
-    updateLastMessage: (state, action: PayloadAction<{ name: string; mes: string; isRealtime: boolean }>) => {
-      const { name, mes, isRealtime } = action.payload;
-      const index = state.userList.findIndex((u) => u.name.trim() === name.trim());
+    updateLastMessage: (state, action: PayloadAction<{ name: string; mes: string; isRealtime: boolean; actionTime?: string }>) => {
+  const { name, mes, isRealtime, actionTime } = action.payload;
+  
+  const index = state.userList.findIndex(
+    (u) => u.name.trim().toLowerCase() === name.trim().toLowerCase()
+  );
 
-      if (index !== -1) {
-        const isCurrentlyActive = state.activeChat?.name === name;
-
-        state.userList[index].lastMes = mes;
-
-        if (isRealtime && !isCurrentlyActive) {
-          state.userList[index].unreadCount = (state.userList[index].unreadCount || 0) + 1;
-          state.userList[index].isUnread = true;
-        } 
-        
-        if (isCurrentlyActive) {
-          state.userList[index].unreadCount = 0;
-          state.userList[index].isUnread = false;
-        }
-      }
+  if (index !== -1) {
+    state.userList[index].lastMes = mes;
+    if (actionTime) {
+      state.userList[index].actionTime = actionTime;
     }
+
+    if (isRealtime && state.activeChat?.name !== state.userList[index].name) {
+      state.userList[index].isUnread = true;
+      state.userList[index].unreadCount = (state.userList[index].unreadCount || 0) + 1;
+    }
+
+    if (isRealtime) {
+      const [movedItem] = state.userList.splice(index, 1);
+      state.userList.unshift(movedItem);
+    }
+  }
+}
   },
 });
 

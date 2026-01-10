@@ -4,11 +4,42 @@ import { setUserList, setActiveChat, updateLastMessage } from "../../../../redux
 import { CURRENT_SOCKET } from "../../../../module/appsocket";
 import "./Sidebar.css";
 
+const formatRelativeTime = (timeStr: string | undefined) => {
+  if (!timeStr) return "";
+
+  const date = new Date(timeStr.replace(/-/g, "/"));
+  const now = new Date();
+
+  if (isNaN(date.getTime())) return "";
+
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInHours = diffInMs / (1000 * 60 * 60);
+
+  if (diffInHours < 12 && diffInHours >= 0) {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfMsgDay = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const diffInDays = Math.floor((startOfToday - startOfMsgDay) / (1000 * 60 * 60 * 24));
+
+  if (diffInDays === 0) {
+    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  }
+
+  if (diffInDays === 1) return "Hôm qua";
+
+  if (diffInDays < 8) return `${diffInDays} ngày trước`;
+
+  return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+};
+
 export const Sidebar: React.FC = () => {
   const dispatch = useAppDispatch();
   const { userList, activeChat } = useAppSelector((state) => state.siderBar);
-  const { isLogin } = useAppSelector((state) => state.auth);
-
+  const { isLogin, username } = useAppSelector((state) => state.auth);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -25,26 +56,48 @@ export const Sidebar: React.FC = () => {
         }
 
         const isHistory = data.event === "GET_ROOM_CHAT_MES" || data.event === "GET_PEOPLE_CHAT_MES";
-        const isRealtime = data.event === "CHAT" || data.event === "SEND_CHAT";
+        const isRealtime = data.event === "SEND_CHAT";
 
         if (isHistory || isRealtime) {
           let name = "";
           let mes = "";
+          const myName = username || "";
 
           if (data.event === "GET_ROOM_CHAT_MES") {
             const last = data.data.chatData?.[0];
-            if (last) { name = data.data.name; mes = `${last.name}: ${last.mes}`; }
+            if (last) {
+              name = data.data.name;
+              const sender = last.name === myName ? "Bạn" : last.name;
+              mes = `${sender}: ${last.mes}`;
+            }
           } else if (data.event === "GET_PEOPLE_CHAT_MES") {
             const last = data.data?.[0];
-            if (last) { name = last.to === "22130193" ? last.name : last.to; mes = last.mes; }
+            if (last) {
+              name = last.to === myName ? last.name : last.to;
+              const prefix = last.name === myName ? "Bạn: " : "";
+              mes = `${prefix}${last.mes}`;
+            }
           } else if (isRealtime) {
             const msg = data.data;
-            name = msg.type === 1 ? msg.to : (msg.name === "22130193" ? msg.to : msg.name);
-            mes = msg.type === 1 ? `${msg.name}: ${msg.mes}` : msg.mes;
+            name = msg.type === 1 ? msg.to : (msg.name === myName ? msg.to : msg.name);
+
+            if (msg.type === 1) {
+              const sender = msg.name === myName ? "Bạn" : msg.name;
+              mes = `${sender}: ${msg.mes}`;
+            } else {
+              const prefix = msg.name === myName ? "Bạn: " : "";
+              mes = `${prefix}${msg.mes}`;
+            }
           }
 
           if (name) {
-            dispatch(updateLastMessage({ name, mes, isRealtime: isRealtime }));
+            const currentTime = new Date().toLocaleString("en-ZA").replace(",", "");
+            dispatch(updateLastMessage({
+              name,
+              mes,
+              isRealtime: isRealtime,
+              actionTime: isRealtime ? currentTime : undefined
+            }));
           }
         }
       }
@@ -55,7 +108,7 @@ export const Sidebar: React.FC = () => {
       CURRENT_SOCKET.getUserList();
     };
     init();
-  }, [isLogin, dispatch]);
+  }, [isLogin, username, dispatch]);
 
   const filteredList = userList?.filter((item) =>
     item.name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -65,10 +118,10 @@ export const Sidebar: React.FC = () => {
     <div className="sidebar-container">
       <div className="sidebar-header">
         <h2>Messages</h2>
-        <input 
-          type="text" 
-          placeholder="Search..." 
-          className="search-input" 
+        <input
+          type="text"
+          placeholder="Search..."
+          className="search-input"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -86,8 +139,8 @@ export const Sidebar: React.FC = () => {
             }}
           >
             <div className="avatar-section">
-              <div 
-                className="avatar-circle" 
+              <div
+                className="avatar-circle"
                 style={{ background: item.type === 1 ? "linear-gradient(135deg, #0084ff, #00c6ff)" : "linear-gradient(135deg, #44bec7, #3498db)" }}
               >
                 {item.name?.charAt(0).toUpperCase()}
@@ -104,7 +157,7 @@ export const Sidebar: React.FC = () => {
                   </span>
                 </div>
                 <span className="item-time">
-                  {item.actionTime?.split(" ")[1]?.substring(0, 5) || "Vừa xong"}
+                  {formatRelativeTime(item.actionTime)}
                 </span>
               </div>
               <div className="content-bottom">
