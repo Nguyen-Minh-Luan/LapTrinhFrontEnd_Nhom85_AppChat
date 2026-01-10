@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../hook/customHook";
 import { setUserList, setActiveChat, updateLastMessage } from "../../../../redux/sidebarSlice";
 import { CURRENT_SOCKET } from "../../../../module/appsocket";
@@ -15,9 +16,10 @@ const formatRelativeTime = (timeStr: string | undefined) => {
   const diffInMs = now.getTime() - date.getTime();
   const diffInHours = diffInMs / (1000 * 60 * 60);
 
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+
   if (diffInHours < 12 && diffInHours >= 0) {
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
   }
 
@@ -25,18 +27,15 @@ const formatRelativeTime = (timeStr: string | undefined) => {
   const startOfMsgDay = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
   const diffInDays = Math.floor((startOfToday - startOfMsgDay) / (1000 * 60 * 60 * 24));
 
-  if (diffInDays === 0) {
-    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-  }
-
+  if (diffInDays === 0) return `${hours}:${minutes}`;
   if (diffInDays === 1) return "Hôm qua";
-
   if (diffInDays < 8) return `${diffInDays} ngày trước`;
 
   return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
 };
 
 export const Sidebar: React.FC = () => {
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { userList, activeChat } = useAppSelector((state) => state.siderBar);
   const { isLogin, username } = useAppSelector((state) => state.auth);
@@ -45,7 +44,7 @@ export const Sidebar: React.FC = () => {
   useEffect(() => {
     if (!isLogin) return;
 
-    CURRENT_SOCKET.onMessageReceived = (data: any) => {
+    const handleMessage = (data: any) => {
       if (data.status === "success") {
         if (data.event === "GET_USER_LIST") {
           dispatch(setUserList(data.data));
@@ -61,53 +60,53 @@ export const Sidebar: React.FC = () => {
         if (isHistory || isRealtime) {
           let name = "";
           let mes = "";
+          let apiTime = "";
           const myName = username || "";
 
           if (data.event === "GET_ROOM_CHAT_MES") {
             const last = data.data.chatData?.[0];
             if (last) {
               name = data.data.name;
-              const sender = last.name === myName ? "Bạn" : last.name;
-              mes = `${sender}: ${last.mes}`;
+              mes = `${last.name === myName ? "Bạn" : last.name}: ${last.mes}`;
+              apiTime = last.createAt;
             }
           } else if (data.event === "GET_PEOPLE_CHAT_MES") {
             const last = data.data?.[0];
             if (last) {
               name = last.to === myName ? last.name : last.to;
-              const prefix = last.name === myName ? "Bạn: " : "";
-              mes = `${prefix}${last.mes}`;
+              mes = `${last.name === myName ? "Bạn: " : ""}${last.mes}`;
+              apiTime = last.createAt;
             }
           } else if (isRealtime) {
             const msg = data.data;
             name = msg.type === 1 ? msg.to : (msg.name === myName ? msg.to : msg.name);
-
-            if (msg.type === 1) {
-              const sender = msg.name === myName ? "Bạn" : msg.name;
-              mes = `${sender}: ${msg.mes}`;
-            } else {
-              const prefix = msg.name === myName ? "Bạn: " : "";
-              mes = `${prefix}${msg.mes}`;
-            }
+            mes = `${msg.name === myName ? "Bạn: " : ""}${msg.mes}`;
+            apiTime = msg.createAt;
           }
 
           if (name) {
-            const currentTime = new Date().toLocaleString("en-ZA").replace(",", "");
             dispatch(updateLastMessage({
               name,
               mes,
               isRealtime: isRealtime,
-              actionTime: isRealtime ? currentTime : undefined
+              actionTime: apiTime
             }));
           }
         }
       }
     };
 
+    CURRENT_SOCKET.onMessageReceiveds.push(handleMessage);
+
     const init = async () => {
       if (!CURRENT_SOCKET.isConnect()) await CURRENT_SOCKET.connect();
       CURRENT_SOCKET.getUserList();
     };
     init();
+
+    return () => {
+      CURRENT_SOCKET.onMessageReceiveds = CURRENT_SOCKET.onMessageReceiveds.filter(fn => fn !== handleMessage) as any;
+    };
   }, [isLogin, username, dispatch]);
 
   const filteredList = userList?.filter((item) =>
@@ -128,14 +127,13 @@ export const Sidebar: React.FC = () => {
       </div>
 
       <div className="sidebar-list">
-        {filteredList?.map((item, index) => (
+        {filteredList?.map((item) => (
           <div
-            key={index}
+            key={item.name}
             className={`sidebar-item ${activeChat?.name === item.name ? "active" : ""} ${item.isUnread ? "has-unread" : ""}`}
             onClick={() => {
               dispatch(setActiveChat(item));
-              if (item.type === 1) CURRENT_SOCKET.getRoomChatMes(item.name);
-              else CURRENT_SOCKET.getPeopleChatMes(item.name);
+              navigate(`/home?roomid=${encodeURIComponent(item.name)}`);
             }}
           >
             <div className="avatar-section">
