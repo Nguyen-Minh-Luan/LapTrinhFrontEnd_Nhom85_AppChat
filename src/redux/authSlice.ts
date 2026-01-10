@@ -144,7 +144,7 @@ export const logout = createAsyncThunk('logout', async(_, {rejectWithValue}) => 
   if(!CURRENT_SOCKET.isConnect()){
     await CURRENT_SOCKET.connect(); 
   }
-  const response = CURRENT_SOCKET.logout();
+  const response = await CURRENT_SOCKET.logout();
   if(response.event === "LOGOUT" && response.status !== "success"){
     return rejectWithValue(response.mes || "đăng xuất thất bại")
   }

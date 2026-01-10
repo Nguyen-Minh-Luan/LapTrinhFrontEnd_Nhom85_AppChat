@@ -225,8 +225,12 @@ export class ChatSocket {
   /**
    * Đăng xuất người dùng hiện tại.
    */
-  public logout(): any {
-    this._send("LOGOUT", {});
+  public async logout(): Promise<any> {
+    this.response = await this._sendAndWaitResponse(
+      "LOGOUT",
+      {},
+      "LOGOUT",
+    );
     return this.response;
   }
 
