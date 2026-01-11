@@ -25,7 +25,7 @@ export class ChatSocket {
   public onError: ((event: Event) => void) | null;
   public onClosed: (() => void) | null;
   public response: any;
-
+  public shouldReconnect:boolean | true;
   /**
    * Khởi tạo một đối tượng ChatSocket và cố gắng kết nối đến máy chủ WebSocket.
    */
@@ -38,6 +38,7 @@ export class ChatSocket {
     this.onError = null;
     this.onClosed = null;
     this.response = null;
+    this.shouldReconnect = true
   }
 
   public isConnect(): boolean {
@@ -48,11 +49,17 @@ export class ChatSocket {
   }
 
   public reconnect(): void {
-    if (!this.isConnect()) {
+    if (!this.isConnect() && this.shouldReconnect) {
       this.connect();
     }
   }
-
+  public disconnect(): void {
+    this.shouldReconnect = false; // Disable auto-reconnect
+    if (this.socket) {
+      this.socket.close();
+      this.socket = null;
+    }
+  }
   /**
    * Thiết lập kết nối WebSocket.
    * Đăng ký các hàm xử lý sự kiện khi kết nối mở, nhận tin nhắn, lỗi và đóng.
