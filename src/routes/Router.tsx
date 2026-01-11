@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Routes, Route, Navigate } from "react-router";
+import { Routes, Route, Navigate, useLocation } from "react-router";
 import Login from "../features/auth/login";
 import Register from "../features/auth/Register";
 import { MainApp } from "../features/MainApp/MainApp";
@@ -7,22 +7,23 @@ import { useAppDispatch, useAppSelector } from "../hook/customHook";
 import { reLogin } from "../redux/authSlice";
 // import Test from "../module/Test.tsx";
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isLogin, token, isLoading } = useAppSelector((state) => state.auth);
-  const dispatch = useAppDispatch();
 
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const state = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+  const location = useLocation();
   useEffect(() => {
     // Nếu có token nhưng chưa login, thử relogin
     const tryRelogin = async () => {
-      if (token && !isLogin && !isLoading) {
+      if (state.token && !state.isLogin && !state.isLoading) {
         await dispatch(reLogin());
       }
     };
     tryRelogin();
-  }, [token, isLogin, isLoading, dispatch]);
+  }, [state.token, state.isLogin, state.isLoading, dispatch]);
 
   // Đang loading
-  if (isLoading) {
+  if (state.isLoading) {
     return (
       <div
         style={{
@@ -53,54 +54,37 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   // Không có token hoặc relogin thất bại -> redirect to login
-  if (!isLogin) {
-    return <Navigate to="/login" replace />;
+  // Preserve current location để sau khi login có thể quay lại
+  if (!state.isLogin) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
 };
 
-// Component để redirect nếu đã login
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { isLogin } = useAppSelector((state) => state.auth);
+  const location = useLocation();
 
   if (isLogin) {
-    return <Navigate to="/home" replace />;
+    // Nếu có location từ state (user bị redirect về login trước đó)
+    // thì quay lại location đó, giữ nguyên query params
+    const from = (location.state as any)?.from?.pathname + 
+                 (location.state as any)?.from?.search || "/home";
+    return <Navigate to={from} replace />;
   }
 
   return <>{children}</>;
 };
 
 const Router = () => {
+
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/login" />} />
-      <Route
-        path="/login"
-        element={
-          <PublicRoute>
-            <Login />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/register"
-        element={
-          <PublicRoute>
-            <Register />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/home"
-        element={
-          <ProtectedRoute>
-            <MainApp />
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
-  );
+      <Route path="/login"element={<PublicRoute><Login /></PublicRoute>}/>
+      <Route path="/register"element={<PublicRoute><Register /></PublicRoute>}/>
+      <Route path="/home"element={<ProtectedRoute><MainApp /></ProtectedRoute>}/></Routes>);
 };
 
 export default Router;

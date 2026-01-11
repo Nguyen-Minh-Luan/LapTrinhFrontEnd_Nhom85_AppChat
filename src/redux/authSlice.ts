@@ -45,7 +45,6 @@ export const login = createAsyncThunk('login', async(data: {user: string, pass: 
     return rejectWithValue(response.data.message || "đăng nhập thất bại")
   }
   const ecryptedToken = await encryptToken(response.data.RE_LOGIN_CODE)
-  // Lưu cả username và token
   localStorage.setItem("RE_LOGIN_CODE", ecryptedToken);
   localStorage.setItem("USERNAME", data.user);
   
@@ -81,8 +80,8 @@ export const reLogin = createAsyncThunk('reLogin', async(_, {rejectWithValue}) =
 
   const response = await CURRENT_SOCKET.reLogin(username, decryptedToken);
   
+  // Nếu relogin thất bại, xóa token cũ
   if(response.status !== "success"){
-    // Nếu relogin thất bại, xóa token cũ
     localStorage.removeItem('RE_LOGIN_CODE');
     localStorage.removeItem('USERNAME');
     return rejectWithValue(response.mes || "Phiên đăng nhập hết hạn");
@@ -141,16 +140,18 @@ export const logout = createAsyncThunk('logout', async(_, {rejectWithValue}) => 
   CURRENT_SOCKET.onConnected = () => {
     console.log("Socket Connected");
   }
-  if(!CURRENT_SOCKET.isConnect()){
-    await CURRENT_SOCKET.connect(); 
-  }
-  const response = await CURRENT_SOCKET.logout();
-  if(response.event === "LOGOUT" && response.status !== "success"){
-    return rejectWithValue(response.mes || "đăng xuất thất bại")
+  let response = null
+  if (CURRENT_SOCKET.isConnect()) {
+      response = await CURRENT_SOCKET.logout();
+      console.log("Logout response:", response);
   }
   localStorage.removeItem('RE_LOGIN_CODE');
   localStorage.removeItem('USERNAME');
-  
+  CURRENT_SOCKET.onMessageReceived = null;
+  CURRENT_SOCKET.onConnected = null;
+  CURRENT_SOCKET.onError = null;
+  CURRENT_SOCKET.onClosed = null;
+  CURRENT_SOCKET.disconnect()
   return response;
 });
 

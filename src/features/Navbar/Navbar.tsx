@@ -9,8 +9,7 @@ export function Navbar() {
   const handleLogout = async() =>{
     await dispatch(logout())
   }
-
-
+  
   return (
     <>
       <div className="navbar glass-eff border-radius dropshadow">
