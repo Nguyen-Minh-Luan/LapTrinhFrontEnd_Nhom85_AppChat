@@ -6,6 +6,7 @@ export interface ChatResponse {
   event: string;
   status: string;
   data: any;
+  mes: string;
 }
 
 export class ChatSocket {
@@ -16,6 +17,9 @@ export class ChatSocket {
    * @deprecated
    */
   public onMessageReceived: ((data: any) => void) | null;
+  /**
+   * @deprecated
+   */
   public onConnected: (() => void) | null;
   public onConnecteds: [(() => void) | null];
   public onError: ((event: Event) => void) | null;
@@ -233,11 +237,7 @@ export class ChatSocket {
    * Đăng xuất người dùng hiện tại.
    */
   public async logout(): Promise<any> {
-    this.response = await this._sendAndWaitResponse(
-      "LOGOUT",
-      {},
-      "LOGOUT",
-    );
+    this.response = await this._sendAndWaitResponse("LOGOUT", {}, "LOGOUT");
     return this.response;
   }
 
