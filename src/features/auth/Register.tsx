@@ -139,6 +139,11 @@ const Register = () => {
               Tài khoản đã tồn tại vui lòng đổi <br></br>USERNAME hoặc PASSWORD
             </p>
           )}
+          {state.isRegister && (
+            <p className="registerSuccess">
+              Tạo tài khoản thành công <br></br>Vui lòng chuyển qua trang đăng nhập
+            </p>
+          )}
           <button type="submit" className="signin-btn">
             SIGN UP
           </button>
