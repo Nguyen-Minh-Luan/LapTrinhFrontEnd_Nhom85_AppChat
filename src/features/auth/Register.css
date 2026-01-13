@@ -202,7 +202,10 @@
   color: rgb(244, 141, 141);
   font-size: 18px;
 }
-
+.registerSuccess{
+  color: #f3f3f3 ;
+  font-size: 18px;
+}
 
 .social-btn:hover {
   background: #f0f0f0;

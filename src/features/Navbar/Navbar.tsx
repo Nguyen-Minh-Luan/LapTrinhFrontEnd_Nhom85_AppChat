@@ -15,7 +15,7 @@ export function Navbar() {
       <div className="navbar glass-eff border-radius dropshadow">
         <div className="flex flex-grow full-width">
           <div className="flex navbar-left">Home</div>
-          <button className="flex navbar-right" onClick={handleLogout}>Logout</button>
+          <button className="logout-btn" onClick={handleLogout}>Logout</button>
         </div>
         <div className="navbar-center">Nav</div>
       </div>
