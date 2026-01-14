@@ -7,7 +7,6 @@ import { useAppDispatch, useAppSelector } from "../hook/customHook";
 import { reLogin } from "../redux/authSlice";
 // import Test from "../module/Test.tsx";
 
-
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const state = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
@@ -69,22 +68,44 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   if (isLogin) {
     // Nếu có location từ state (user bị redirect về login trước đó)
     // thì quay lại location đó, giữ nguyên query params
-    const from = (location.state as any)?.from?.pathname + 
-                 (location.state as any)?.from?.search || "/home";
-    return <Navigate to={from} replace />;
+    // const from = (location.state as any)?.from?.pathname +
+    //              (location.state as any)?.from?.search || "/home";
+    // return <Navigate to={from} replace />;
   }
 
   return <>{children}</>;
 };
 
 const Router = () => {
-
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/login" />} />
-      <Route path="/login"element={<PublicRoute><Login /></PublicRoute>}/>
-      <Route path="/register"element={<PublicRoute><Register /></PublicRoute>}/>
-      <Route path="/home"element={<ProtectedRoute><MainApp /></ProtectedRoute>}/></Routes>);
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <PublicRoute>
+            <Register />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/home"
+        element={
+          <ProtectedRoute>
+            <MainApp />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
+  );
 };
 
 export default Router;

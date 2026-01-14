@@ -53,3 +53,19 @@
     gap: 4px;
     padding-top: 5px;
 }
+
+.reply-indicator {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.9em;
+    color: #ddd;
+}
+
+.reply-content {
+    border-left: 3px solid #00a8ff;
+    padding-left: 8px;
+}

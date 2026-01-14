@@ -1,12 +1,58 @@
+import { useEffect, useRef, useState } from "react";
 import { Message } from "../../../module/message_decode";
 import "./ChatMessages.css";
+import { ChatMessagesAction } from "./ChatMessagesAction";
 
 export interface ChatMessageProps {
   message: Message;
   isOwner: boolean;
+  onReply: (msg: Message) => void;
+  onUpdate: (updatedMsg: Message) => void;
 }
 
-export function ChatMessage({ message, isOwner }: ChatMessageProps) {
+export function ChatMessage({
+  message,
+  isOwner,
+  onReply,
+  onUpdate,
+}: ChatMessageProps) {
+  const [showActions, setShowActions] = useState(false);
+  const pressTimer = useRef<NodeJS.Timeout | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dynamicClassname, setDynamicClassname] = useState("");
+
+  useEffect(() => {
+    function handleClickOutside(event: any) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target)
+      ) {
+        setShowActions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleStart = () => {
+    console.log("click");
+    pressTimer.current = setTimeout(() => {
+      console.log("show");
+      setShowActions(true);
+    }, 1000);
+  };
+
+  const handleEnd = () => {
+    if (pressTimer.current) {
+      console.log("out");
+      clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+  };
+
+  const hideShowActionsFunc = () => {
+    setShowActions(false);
+  };
   const handleDownload = () => {
     if (!message.data) return;
 
@@ -63,10 +109,57 @@ export function ChatMessage({ message, isOwner }: ChatMessageProps) {
     </button>
   );
 
+  useEffect(() => {
+    var classNameD = "message-container";
+
+    if (isOwner) {
+      classNameD += " owner";
+    }
+
+    if (message.reaction) {
+      classNameD += " reaction";
+    }
+
+    if (message.can_display_name && !isOwner) {
+      classNameD += " display-name";
+    }
+    setDynamicClassname(classNameD);
+  }, [message, isOwner]);
+
   return (
-    <div className={isOwner ? "message-container owner" : "message-container"}>
+    <div
+      ref={containerRef}
+      onMouseDown={handleStart}
+      onMouseUp={handleEnd}
+      onMouseLeave={handleEnd}
+      onTouchStart={handleStart}
+      onTouchEnd={handleEnd}
+      className={dynamicClassname}
+    >
       <div className={isOwner ? "message-content owner" : "message-content"}>
+        {showActions && (
+          <ChatMessagesAction
+            message={message}
+            isOwner={isOwner}
+            onReply={onReply}
+            onUpdate={onUpdate}
+            hideShowActionsFunc={hideShowActionsFunc}
+          />
+        )}
+
+        {message.awser_from && (
+          <div className="reply-context-bubble">
+            Trả lời: {message.awser_from}
+          </div>
+        )}
         {renderContent()}
+        {message.reaction && (
+          <div className="message-reaction-badge">{message.reaction}</div>
+        )}
+
+        {message.can_display_name && !isOwner && (
+          <div className="message-name">{message.name}</div>
+        )}
       </div>
     </div>
   );

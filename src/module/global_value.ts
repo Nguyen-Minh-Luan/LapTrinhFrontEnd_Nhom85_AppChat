@@ -1,4 +1,14 @@
+import { decryptToken } from "./encryption";
+
 export const GLOBAL_VALUE = {
-  username: "22130102",
-  password: "123",
+  username: () => {
+    return localStorage.getItem("USERNAME");
+  },
+  relogincode: async () => {
+    const decryptedToken = await decryptToken(
+      localStorage.getItem("RE_LOGIN_CODE"),
+    );
+
+    return decryptedToken;
+  },
 };
