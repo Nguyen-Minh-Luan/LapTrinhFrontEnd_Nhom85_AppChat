@@ -377,11 +377,6 @@ export class ChatSocket {
     this._send("GET_USER_LIST", {});
   }
 
-  /**
-   * MỚI: Lấy TOÀN BỘ tin nhắn của phòng (tự động phân trang 1->100).
-   * @param roomName Tên phòng
-   * @returns Promise<Array> Danh sách tin nhắn thô
-   */
   public async getAllRoomChatMes(roomName: string): Promise<any[]> {
     let allMessages: any[] = [];
     const MAX_PAGE = 100;
@@ -411,11 +406,6 @@ export class ChatSocket {
     return allMessages;
   }
 
-  /**
-   * MỚI: Lấy TOÀN BỘ tin nhắn người dùng (tự động phân trang 1->100).
-   * @param userName Tên người dùng
-   * @returns Promise<Array> Danh sách tin nhắn thô
-   */
   public async getAllPeopleChatMes(userName: string): Promise<any[]> {
     let allMessages: any[] = [];
     const MAX_PAGE = 100;

@@ -14,14 +14,13 @@ export interface Message {
 }
 
 interface ChunkPayload {
-  realType: string; // 'image', 'video', 'file'
+  realType: string;
   fileName: string;
-  part: number; // Số thứ tự (0, 1, 2...)
-  total: number; // Tổng số phần
-  content: string; // Một phần chuỗi Base64
+  part: number;
+  total: number;
+  content: string;
 }
 
-// Hàm tạo tin nhắn văn bản (Giữ nguyên)
 export function createMessage(mess: string): Message {
   const timestamp = Date.now().toString();
   return {
@@ -37,12 +36,6 @@ export function createMessage(mess: string): Message {
   };
 }
 
-/**
- * Tạo danh sách tin nhắn từ file, cắt nhỏ thành các chunk
- * @param data Chuỗi Base64 của file
- * @param file Đối tượng File
- * @param chunkSize Kích thước mỗi gói tin (mặc định 1000 ký tự)
- */
 export function createFileMessage(
   data: string,
   file: File,
@@ -139,7 +132,7 @@ export function messageDepack(data: any[]) {
         if (!chunkBuffer.has(gid)) {
           chunkBuffer.set(gid, {
             parts: new Array(payload.total).fill(null),
-            total: payload.total,
+            total: payload.total - 1,
             realType: payload.realType,
             receivedCount: 0,
           });
@@ -147,7 +140,7 @@ export function messageDepack(data: any[]) {
 
         const buffer = chunkBuffer.get(gid)!;
 
-        if (buffer.total !== payload.total) {
+        if (buffer.total !== payload.total - 1) {
           continue;
         }
 
