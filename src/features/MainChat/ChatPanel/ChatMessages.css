@@ -1,15 +1,24 @@
 .message-container {
     display: flex;
     justify-content: flex-start;
-    margin-bottom: 10px;
+}
+
+.message-container.reaction {
+    margin-bottom: 15px;
+}
+
+.message-container.display-name {
+    margin-bottom: 50px;
 }
 
 .message-content {
     background-color: var(--message-content-bg-color);
     padding: 8px 12px;
+    margin-bottom: 4px;
     border-radius: 15px 15px 15px 0;
     max-width: 50%;
     word-wrap: break-word;
+    position: relative;
 }
 
 .message-container.owner {
@@ -53,7 +62,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding-right: 30px; /* Chừa chỗ cho nút download */
+    padding-right: 30px;
     min-width: 150px;
 }
 
@@ -94,11 +103,42 @@
     background-color: rgba(0, 0, 0, 0.8);
 }
 
-/* Điều chỉnh màu nút download khi ở trên nền trắng (file) */
 .file-wrapper .download-btn {
     background-color: #ddd;
     color: #333;
 }
 .file-wrapper .download-btn:hover {
     background-color: #ccc;
+}
+
+.message-reaction-badge {
+    position: absolute;
+    bottom: -10px;
+    right: 0px;
+    background: #333;
+    border-radius: 10px;
+    padding: 2px 6px;
+    font-size: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.reply-context-bubble {
+    font-size: 0.8em;
+    color: rgba(0, 0, 0, 0.7);
+    margin-bottom: 5px;
+    padding-left: 8px;
+    border-left: 2px solid rgba(255, 255, 255, 0.5);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+.message-name {
+    color: rgba(255, 255, 255, 1);
+    position: absolute;
+    top: 100%;
+    margin-top: 10px;
+    left: 0px;
+    border-radius: 10px;
 }

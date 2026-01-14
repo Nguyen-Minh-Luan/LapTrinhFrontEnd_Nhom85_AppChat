@@ -1,6 +1,8 @@
 const BASE_URL = "wss://chat.longapp.site/chat/chat";
 
 export const EV_GET_ROOM_CHAT_MES = "GET_ROOM_CHAT_MES";
+export const EV_GET_PEOPLE_CHAT_MES = "GET_PEOPLE_CHAT_MES";
+export const EV_GET_USER_LIST = "GET_USER_LIST";
 
 export interface ChatResponse {
   event: string;
@@ -9,9 +11,12 @@ export interface ChatResponse {
   mes: string;
 }
 
+type MessageCallback = (id: string, data: ChatResponse) => void;
+
 export class ChatSocket {
   private url: string;
   private socket: WebSocket | null;
+  private messageListeners: Map<string, MessageCallback>;
   public onMessageReceiveds: [(data: ChatResponse) => void | null];
   /**
    * @deprecated
@@ -25,7 +30,7 @@ export class ChatSocket {
   public onError: ((event: Event) => void) | null;
   public onClosed: (() => void) | null;
   public response: any;
-  public shouldReconnect:boolean | true;
+  public shouldReconnect: boolean | true;
   /**
    * Khởi tạo một đối tượng ChatSocket và cố gắng kết nối đến máy chủ WebSocket.
    */
@@ -38,7 +43,30 @@ export class ChatSocket {
     this.onError = null;
     this.onClosed = null;
     this.response = null;
-    this.shouldReconnect = true
+    this.shouldReconnect = true;
+    this.messageListeners = new Map();
+  }
+
+  /**
+   * Đăng ký một callback nhận tin nhắn với định danh cụ thể.
+   * Nếu ID đã tồn tại, callback cũ sẽ bị thay thế bằng callback mới.
+   * @param id Tên định danh (ví dụ: "ChatPanel", "NotificationService")
+   * @param callback Hàm xử lý data
+   */
+  public addMessageReceived(id: string, callback: MessageCallback): void {
+    if (id && callback) {
+      this.messageListeners.set(id, callback);
+    }
+  }
+
+  /**
+   * Hủy đăng ký callback theo định danh.
+   * @param id Tên định danh cần xóa
+   */
+  public removeMessageReceived(id: string): void {
+    if (this.messageListeners.has(id)) {
+      this.messageListeners.delete(id);
+    }
   }
 
   public isConnect(): boolean {
@@ -79,7 +107,11 @@ export class ChatSocket {
       this.socket.onopen = () => {
         for (var call of this.onConnecteds) {
           if (call) {
-            call();
+            try {
+              call();
+            } catch (e) {
+              console.log(e);
+            }
           }
         }
         clearTimeout(timer);
@@ -98,9 +130,20 @@ export class ChatSocket {
       this.socket.onmessage = (event: MessageEvent) => {
         try {
           const data = JSON.parse(event.data);
+          this.messageListeners.forEach((callback, id) => {
+            try {
+              callback(id, data);
+            } catch (err) {
+              console.error(`Error in listener [${id}]:`, err);
+            }
+          });
           for (var call of this.onMessageReceiveds) {
             if (call) {
-              call(data);
+              try {
+                call(data);
+              } catch (e) {
+                console.log(e);
+              }
             }
           }
           if (this.onMessageReceived) {
