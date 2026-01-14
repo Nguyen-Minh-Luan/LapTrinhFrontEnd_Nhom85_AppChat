@@ -24,7 +24,6 @@ interface UploadedFile {
 }
 
 export function ChatPanel() {
-  const LISTENER_ID = "ChatPanel_Listener";
   const [searchParams] = useSearchParams();
 
   const [mess, setMess] = useState<any[]>([]);
@@ -143,7 +142,7 @@ export function ChatPanel() {
       for (const fileItem of files) {
         const msg = createFileMessage(fileItem.preview, fileItem.file);
         for (let m of msg) {
-          await new Promise((r) => setTimeout(r, 500));
+          await new Promise((r) => setTimeout(r, 100));
           await sendData(JSON.stringify(m), true);
         }
       }
