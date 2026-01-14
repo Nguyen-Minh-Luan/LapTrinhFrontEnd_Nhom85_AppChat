@@ -39,48 +39,27 @@ export function ChatPanel() {
   const currentRoom = searchParams.get("roomid");
   const currentUser = searchParams.get("user");
 
+  const fetchMessages = async () => {
+    try {
+      let rawMessages = [];
+
+      if (currentRoom) {
+        rawMessages = await CURRENT_SOCKET.getAllRoomChatMes(currentRoom);
+      } else if (currentUser) {
+        rawMessages = await CURRENT_SOCKET.getAllPeopleChatMes(currentUser);
+      }
+      console.log(rawMessages);
+      const processed = messageDepack(rawMessages);
+      console.log(processed);
+      setMess(processed);
+    } catch (e) {
+      console.error("Lỗi tải tin nhắn:", e);
+    }
+  };
+
   useEffect(() => {
-    const handleSocketMessage = (id: string, data: ChatResponse) => {
-      if (!data) return;
-      if (id !== LISTENER_ID) return;
-
-      let rawList: any[] = [];
-      let shouldUpdate = false;
-      if (
-        data.event === EV_GET_ROOM_CHAT_MES &&
-        currentRoom &&
-        currentRoom === data.data["name"]
-      ) {
-        rawList = data.data?.chatData || [];
-        shouldUpdate = true;
-      } else if (data.event === EV_GET_PEOPLE_CHAT_MES && currentUser) {
-        if (Array.isArray(data.data) && data.data.length > 0) {
-          if (data.data[0].to === currentUser) rawList = data.data;
-          shouldUpdate = true;
-        }
-      }
-
-      if (shouldUpdate) {
-        const processedMessages = messageDepack(rawList);
-        setMess(processedMessages);
-      }
-    };
-
-    CURRENT_SOCKET.addMessageReceived(LISTENER_ID, handleSocketMessage);
-
-    const fetchData = async () => {
-      if (!CURRENT_SOCKET.isConnect()) {
-      } else {
-        if (currentRoom) CURRENT_SOCKET.getRoomChatMes(currentRoom);
-        if (currentUser) CURRENT_SOCKET.getPeopleChatMes(currentUser);
-      }
-    };
-    fetchData();
-
-    return () => {
-      CURRENT_SOCKET.removeMessageReceived(LISTENER_ID);
-    };
-  }, [currentUser, currentRoom, LISTENER_ID]);
+    fetchMessages();
+  }, [currentRoom, currentUser]);
 
   useEffect(() => {
     const handleConnect = async () => {
@@ -89,8 +68,7 @@ export function ChatPanel() {
         await GLOBAL_VALUE.relogincode(),
       );
 
-      if (currentRoom) CURRENT_SOCKET.getRoomChatMes(currentRoom);
-      if (currentUser) CURRENT_SOCKET.getPeopleChatMes(currentUser);
+      await fetchMessages();
     };
 
     CURRENT_SOCKET.onConnecteds.push(handleConnect);
@@ -135,10 +113,10 @@ export function ChatPanel() {
   const sendData = async (payload: string, isFile: boolean = false) => {
     if (currentRoom) {
       CURRENT_SOCKET.sendChatToRoom(currentRoom, payload);
-      if (!isFile) CURRENT_SOCKET.getRoomChatMes(currentRoom);
+      if (!isFile) await fetchMessages();
     } else if (currentUser) {
       CURRENT_SOCKET.sendChatToPeople(currentUser, payload);
-      if (!isFile) CURRENT_SOCKET.getPeopleChatMes(currentUser);
+      if (!isFile) await fetchMessages();
     }
   };
 
@@ -164,12 +142,13 @@ export function ChatPanel() {
     if (files.length > 0) {
       for (const fileItem of files) {
         const msg = createFileMessage(fileItem.preview, fileItem.file);
-        await new Promise((r) => setTimeout(r, 3000));
-        await sendData(JSON.stringify(msg), true);
+        for (let m of msg) {
+          await new Promise((r) => setTimeout(r, 500));
+          await sendData(JSON.stringify(m), true);
+        }
       }
       setFiles([]);
-      if (currentRoom) CURRENT_SOCKET.getRoomChatMes(currentRoom);
-      if (currentUser) CURRENT_SOCKET.getPeopleChatMes(currentUser);
+      fetchMessages();
     }
   };
 

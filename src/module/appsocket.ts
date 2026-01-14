@@ -376,6 +376,77 @@ export class ChatSocket {
   public getUserList(): void {
     this._send("GET_USER_LIST", {});
   }
+
+  /**
+   * MỚI: Lấy TOÀN BỘ tin nhắn của phòng (tự động phân trang 1->100).
+   * @param roomName Tên phòng
+   * @returns Promise<Array> Danh sách tin nhắn thô
+   */
+  public async getAllRoomChatMes(roomName: string): Promise<any[]> {
+    let allMessages: any[] = [];
+    const MAX_PAGE = 100;
+
+    for (let page = 1; page <= MAX_PAGE; page++) {
+      try {
+        const response = await this._sendAndWaitResponse(
+          "GET_ROOM_CHAT_MES",
+          { name: roomName, page: page },
+          EV_GET_ROOM_CHAT_MES,
+        );
+        const pageData = response.data?.chatData || [];
+
+        if (!Array.isArray(pageData) || pageData.length === 0) {
+          break;
+        }
+
+        allMessages = [...allMessages, ...pageData];
+      } catch (error) {
+        console.warn(`Error fetching room chat page ${page}:`, error);
+        break;
+      }
+    }
+
+    allMessages = allMessages.filter((item) => item.to === roomName);
+
+    return allMessages;
+  }
+
+  /**
+   * MỚI: Lấy TOÀN BỘ tin nhắn người dùng (tự động phân trang 1->100).
+   * @param userName Tên người dùng
+   * @returns Promise<Array> Danh sách tin nhắn thô
+   */
+  public async getAllPeopleChatMes(userName: string): Promise<any[]> {
+    let allMessages: any[] = [];
+    const MAX_PAGE = 100;
+
+    for (let page = 1; page <= MAX_PAGE; page++) {
+      try {
+        const response = await this._sendAndWaitResponse(
+          "GET_PEOPLE_CHAT_MES",
+          { name: userName, page: page },
+          EV_GET_PEOPLE_CHAT_MES,
+        );
+
+        const pageData = response.data?.data
+          ? response.data.data
+          : response.data;
+        const list = Array.isArray(pageData) ? pageData : [];
+
+        if (list.length === 0) {
+          break;
+        }
+
+        allMessages = [...allMessages, ...list];
+      } catch (error) {
+        console.warn(`Error fetching people chat page ${page}:`, error);
+        break;
+      }
+    }
+
+    allMessages = allMessages.filter((item) => item.to === userName);
+    return allMessages;
+  }
 }
 
 export const CURRENT_SOCKET = new ChatSocket();
