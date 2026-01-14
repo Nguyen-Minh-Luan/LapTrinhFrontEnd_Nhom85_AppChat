@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../hook/customHook";
 import { setUserList, setActiveChat, updateLastMessage } from "../../../../redux/sidebarSlice";
+import { decryptToken } from "../../../../module/encryption";
 import { CURRENT_SOCKET } from "../../../../module/appsocket";
 import "./Sidebar.css";
 
@@ -44,6 +45,61 @@ export const Sidebar: React.FC = () => {
   useEffect(() => {
     if (!isLogin) return;
 
+    const processMessage = async (rawData: string, senderName: string, isRealtime: boolean, apiTime: string, targetName: string) => {
+  try {
+    let displayContent = "";
+    const myName = username || "";
+
+    if (rawData.startsWith('{') || rawData.startsWith('[')) {
+      try {
+        let msgObj: any;
+        const parsedData = JSON.parse(rawData);
+
+        if (Array.isArray(parsedData)) {
+          msgObj = parsedData[0]; 
+        } else {
+          msgObj = parsedData;
+        }
+
+        const msgType = msgObj.type?.toUpperCase();
+
+        if (msgType === "IMAGE") {
+          displayContent = "[Hình ảnh]";
+        } else if (msgType === "VIDEO") {
+          displayContent = "[Video]";
+        } else if (msgType === "TEXT") {
+          try {
+            displayContent = await decryptToken(msgObj.content || msgObj.data);
+          } catch {
+            displayContent = msgObj.content || msgObj.data || "";
+          }
+        } else {
+          displayContent = "[Tệp đính kèm]";
+        }
+      } catch (e) {
+        displayContent = rawData.substring(0, 30);
+      }
+    } else {
+      displayContent = rawData;
+    }
+
+    const shortContent = displayContent.length > 50 
+      ? displayContent.substring(0, 50) + "..." 
+      : displayContent;
+
+    const finalMes = `${senderName === myName ? "Bạn: " : ""}${shortContent}`;
+
+    dispatch(updateLastMessage({
+      name: targetName,
+      mes: finalMes,
+      isRealtime: isRealtime,
+      actionTime: apiTime
+    }));
+  } catch (error) {
+    console.error("Lỗi xử lý sidebar:", error);
+  }
+};
+
     const handleMessage = (data: any) => {
       if (data.status === "success") {
         if (data.event === "GET_USER_LIST") {
@@ -58,39 +114,25 @@ export const Sidebar: React.FC = () => {
         const isRealtime = data.event === "SEND_CHAT";
 
         if (isHistory || isRealtime) {
-          let name = "";
-          let mes = "";
-          let apiTime = "";
           const myName = username || "";
 
           if (data.event === "GET_ROOM_CHAT_MES") {
             const last = data.data.chatData?.[0];
             if (last) {
-              name = data.data.name;
-              mes = `${last.name === myName ? "Bạn" : last.name}: ${last.mes}`;
-              apiTime = last.createAt;
+              processMessage(last.mes, last.name, false, last.createAt, data.data.name);
             }
-          } else if (data.event === "GET_PEOPLE_CHAT_MES") {
+          }
+          else if (data.event === "GET_PEOPLE_CHAT_MES") {
             const last = data.data?.[0];
             if (last) {
-              name = last.to === myName ? last.name : last.to;
-              mes = `${last.name === myName ? "Bạn: " : ""}${last.mes}`;
-              apiTime = last.createAt;
+              const targetName = last.name === myName ? last.to : last.name;
+              processMessage(last.mes, last.name, false, last.createAt, targetName);
             }
-          } else if (isRealtime) {
-            const msg = data.data;
-            name = msg.type === 1 ? msg.to : (msg.name === myName ? msg.to : msg.name);
-            mes = `${msg.name === myName ? "Bạn: " : ""}${msg.mes}`;
-            apiTime = msg.createAt;
           }
-
-          if (name) {
-            dispatch(updateLastMessage({
-              name,
-              mes,
-              isRealtime: isRealtime,
-              actionTime: apiTime
-            }));
+          else if (isRealtime) {
+            const msg = data.data;
+            const targetName = msg.type === 1 ? msg.to : (msg.name === myName ? msg.to : msg.name);
+            processMessage(msg.mes, msg.name, true, msg.createAt, targetName);
           }
         }
       }
