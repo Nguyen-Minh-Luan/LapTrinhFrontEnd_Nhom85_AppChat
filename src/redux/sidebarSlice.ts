@@ -1,8 +1,17 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+interface ChatItem {
+  name: string;
+  type: number;
+  lastMes: string;
+  unreadCount: number;
+  isUnread: boolean;
+  actionTime: string;
+}
+
 interface SidebarState {
-  userList: any[];
-  activeChat: any | null;
+  userList: ChatItem[];
+  activeChat: ChatItem | null;
 }
 
 const initialState: SidebarState = {
@@ -10,7 +19,7 @@ const initialState: SidebarState = {
   activeChat: null,
 };
 
-const getTimestamp = (timeStr: string | undefined) => {
+const getTimestamp = (timeStr: string | undefined): number => {
   if (!timeStr) return 0;
   return new Date(timeStr.replace(/-/g, "/")).getTime();
 };
@@ -19,8 +28,8 @@ const sidebarSlice = createSlice({
   name: 'sidebar',
   initialState,
   reducers: {
-    setUserList: (state, action) => {
-      const newList = action.payload.map((newUser: any) => {
+    setUserList: (state, action: PayloadAction<any[]>) => {
+      const newList = action.payload.map((newUser) => {
         const oldUser = state.userList.find(u => u.name === newUser.name);
         return {
           ...newUser,
@@ -31,12 +40,16 @@ const sidebarSlice = createSlice({
         };
       });
 
-      state.userList = newList.sort((a, b) => getTimestamp(b.actionTime) - getTimestamp(a.actionTime));
+      state.userList = newList.sort((a: ChatItem, b: ChatItem) => 
+        getTimestamp(b.actionTime) - getTimestamp(a.actionTime)
+      );
     },
 
-    setActiveChat: (state, action) => {
+    setActiveChat: (state, action: PayloadAction<ChatItem>) => {
       state.activeChat = action.payload;
-      const index = state.userList.findIndex(u => u.name === action.payload.name);
+      const index = state.userList.findIndex(
+        u => u.name.trim().toLowerCase() === action.payload.name.trim().toLowerCase()
+      );
       if (index !== -1) {
         state.userList[index].unreadCount = 0;
         state.userList[index].isUnread = false;
@@ -44,33 +57,38 @@ const sidebarSlice = createSlice({
     },
 
     updateLastMessage: (state, action: PayloadAction<{ name: string; mes: string; isRealtime: boolean; actionTime?: string }>) => {
-  const { name, mes, isRealtime, actionTime } = action.payload;
+      const { name, mes, isRealtime, actionTime } = action.payload;
 
-  const index = state.userList.findIndex(
-    (u) => u.name.trim().toLowerCase() === name.trim().toLowerCase()
-  );
+      const index = state.userList.findIndex(
+        (u) => u.name.trim().toLowerCase() === name.trim().toLowerCase()
+      );
 
-  if (index !== -1) {
-    const updatedUser = {
-      ...state.userList[index],
-      lastMes: mes,
-      actionTime: actionTime || state.userList[index].actionTime 
-    };
+      if (index !== -1) {
+        const existingUser = state.userList[index];
+        const newTime = getTimestamp(actionTime);
+        const oldTime = getTimestamp(existingUser.actionTime);
 
-    if (isRealtime && state.activeChat?.name !== updatedUser.name) {
-      updatedUser.isUnread = true;
-      updatedUser.unreadCount = (updatedUser.unreadCount || 0) + 1;
+        if (newTime >= oldTime || isRealtime) {
+          const updatedUser = {
+            ...existingUser,
+            lastMes: mes,
+            actionTime: actionTime || existingUser.actionTime 
+          };
+
+          if (isRealtime && state.activeChat?.name !== updatedUser.name) {
+            updatedUser.isUnread = true;
+            updatedUser.unreadCount = (updatedUser.unreadCount || 0) + 1;
+          }
+
+          const remainingUsers = state.userList.filter((_, i) => i !== index);
+          const newList = [updatedUser, ...remainingUsers];
+
+          state.userList = newList.sort((a: ChatItem, b: ChatItem) => 
+            getTimestamp(b.actionTime) - getTimestamp(a.actionTime)
+          );
+        }
+      }
     }
-
-    const remainingUsers = state.userList.filter((_, i) => i !== index);
-    
-    state.userList = [updatedUser, ...remainingUsers];
-
-    if (!isRealtime) {
-      state.userList.sort((a, b) => getTimestamp(b.actionTime) - getTimestamp(a.actionTime));
-    }
-  }
-}
   },
 });
 
