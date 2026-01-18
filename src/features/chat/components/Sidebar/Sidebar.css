@@ -181,3 +181,41 @@
   justify-content: center;
   font-weight: bold;
 }
+
+.search-box-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.search-actions-menu {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  animation: slideDown 0.2s ease;
+}
+
+.search-actions-menu button {
+  flex: 1;
+  background: #313338;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #dbdee1;
+  padding: 6px 4px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.search-actions-menu button:hover {
+  cursor: pointer;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
