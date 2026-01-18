@@ -36,6 +36,10 @@ const Login = () => {
   }
 
   CURRENT_SOCKET.addMessageReceived("LOGIN", (id, data) => {
+    if (data.data.length < 1) {
+      navigate(`/home`);
+    }
+
     if (data.event === EV_GET_USER_LIST && id === "LOGIN") {
       const newestItem = data.data.reduce((latest, current) => {
         return new Date(latest.actionTime) > new Date(current.actionTime)

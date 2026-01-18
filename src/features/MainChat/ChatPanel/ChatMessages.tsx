@@ -1,3 +1,4 @@
+import { formatTime } from "../../../module/utlis";
 import { useEffect, useRef, useState } from "react";
 import { Message } from "../../../module/message_decode";
 import "./ChatMessages.css";
@@ -35,16 +36,13 @@ export function ChatMessage({
   }, []);
 
   const handleStart = () => {
-    console.log("click");
     pressTimer.current = setTimeout(() => {
-      console.log("show");
       setShowActions(true);
     }, 1000);
   };
 
   const handleEnd = () => {
     if (pressTimer.current) {
-      console.log("out");
       clearTimeout(pressTimer.current);
       pressTimer.current = null;
     }
@@ -120,7 +118,7 @@ export function ChatMessage({
       classNameD += " reaction";
     }
 
-    if (message.can_display_name && !isOwner) {
+    if (message.can_display_name) {
       classNameD += " display-name";
     }
     setDynamicClassname(classNameD);
@@ -158,7 +156,9 @@ export function ChatMessage({
         )}
 
         {message.can_display_name && !isOwner && (
-          <div className="message-name">{message.name}</div>
+          <div className="message-name">
+            {message.name} - {formatTime(message.time)}
+          </div>
         )}
       </div>
     </div>

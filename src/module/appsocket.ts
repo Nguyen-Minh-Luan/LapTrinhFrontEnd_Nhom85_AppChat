@@ -3,6 +3,7 @@ const BASE_URL = "wss://chat.longapp.site/chat/chat";
 export const EV_GET_ROOM_CHAT_MES = "GET_ROOM_CHAT_MES";
 export const EV_GET_PEOPLE_CHAT_MES = "GET_PEOPLE_CHAT_MES";
 export const EV_GET_USER_LIST = "GET_USER_LIST";
+export const EV_SEND_CHAT = "SEND_CHAT";
 
 export interface ChatResponse {
   event: string;
@@ -231,7 +232,6 @@ export class ChatSocket {
     };
 
     this.socket.send(JSON.stringify(message));
-    //công việc send đã kết thúc ngay tại đây (hãy nhìn nó như là 1 return của hàm này)
   }
 
   /**

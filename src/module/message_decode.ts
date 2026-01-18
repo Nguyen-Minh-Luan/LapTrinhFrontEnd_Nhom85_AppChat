@@ -8,6 +8,7 @@ export interface Message {
   name: string | null;
   is_delete: boolean;
   reaction: string;
+  reactionIdx: number;
   awser_from: string;
   can_display_name: boolean;
   time: string;
@@ -19,6 +20,22 @@ interface ChunkPayload {
   part: number;
   total: number;
   content: string;
+}
+
+export function encodeEmoji(emoji: string) {
+  const REACTIONS = ["👍", "❤️", "😂", "😮", "😢"];
+
+  return REACTIONS.indexOf(emoji);
+}
+
+export function decodeEmoji(emojiIdx: number) {
+  const REACTIONS = ["👍", "❤️", "😂", "😮", "😢"];
+
+  if (emojiIdx < 0) {
+    return "";
+  }
+
+  return REACTIONS[emojiIdx];
 }
 
 export function createMessage(mess: string): Message {
@@ -33,6 +50,7 @@ export function createMessage(mess: string): Message {
     awser_from: "",
     can_display_name: false,
     time: "",
+    reactionIdx: -1,
   };
 }
 
@@ -75,6 +93,7 @@ export function createFileMessage(
       awser_from: "",
       can_display_name: false,
       time: "",
+      reactionIdx: -1,
     });
   }
 
@@ -97,6 +116,8 @@ export function messageDepack(data: any[]) {
 
     try {
       messageData = JSON.parse(rawData);
+      messageData.name = c.name;
+      messageData.time = c.createAt;
       if (!messageData || !messageData.gid) {
         throw new Error("Invalid message format");
       }
@@ -110,6 +131,7 @@ export function messageDepack(data: any[]) {
         reaction: "",
         awser_from: "",
         time: c.createAt,
+        reactionIdx: -1,
       } as any;
     }
 
@@ -170,6 +192,8 @@ export function messageDepack(data: any[]) {
       existing.data.is_delete = messageData.is_delete;
       existing.data.reaction = messageData.reaction;
       existing.data.awser_from = messageData.awser_from;
+      existing.data.reactionIdx = messageData.reactionIdx;
+      // existing.data.name = c.name;
 
       if (messageData.type !== "text" && messageData.data) {
         existing.data.data = messageData.data;
@@ -197,6 +221,7 @@ export function messageDepack(data: any[]) {
     const nextMsg = message_list[i + 1];
 
     currentMsg.data.can_display_name = false;
+    currentMsg.data.reaction = decodeEmoji(currentMsg.data.reactionIdx);
 
     if (!nextMsg) {
       currentMsg.data.can_display_name = true;

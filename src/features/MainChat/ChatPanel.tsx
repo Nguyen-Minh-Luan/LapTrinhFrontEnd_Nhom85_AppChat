@@ -3,8 +3,9 @@ import {
   CURRENT_SOCKET,
   EV_GET_PEOPLE_CHAT_MES,
   EV_GET_ROOM_CHAT_MES,
+  EV_SEND_CHAT,
 } from "../../module/appsocket";
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import "./ChatPanel.css";
 import { ChatMessage } from "./ChatPanel/ChatMessages";
@@ -14,14 +15,22 @@ import { FilePreview } from "./ChatPanel/FilePreview";
 import {
   createFileMessage,
   createMessage,
+  encodeEmoji,
   Message,
   messageDepack,
 } from "../../module/message_decode";
+import { data } from "react-router-dom";
 
 interface UploadedFile {
   file: File;
   preview: string;
 }
+
+const getCurrentTimeStr = () => {
+  const now = new Date();
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+};
 
 export function ChatPanel() {
   const [searchParams] = useSearchParams();
@@ -30,6 +39,7 @@ export function ChatPanel() {
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [rawMessagesList, setRawMessagesList] = useState<any[]>([]);
 
   const chatInput = useRef<HTMLInputElement>(null);
   const targetDropZone = useRef<HTMLDivElement>(null);
@@ -37,41 +47,59 @@ export function ChatPanel() {
 
   const currentRoom = searchParams.get("roomid");
   const currentUser = searchParams.get("user");
-
   const fetchMessages = async () => {
     try {
       let rawMessages = [];
-
       if (currentRoom) {
         rawMessages = await CURRENT_SOCKET.getAllRoomChatMes(currentRoom);
       } else if (currentUser) {
         rawMessages = await CURRENT_SOCKET.getAllPeopleChatMes(currentUser);
       }
-      console.log(rawMessages);
-      const processed = messageDepack(rawMessages);
-      console.log(processed);
-      setMess(processed);
+      if (Array.isArray(rawMessages)) {
+        setRawMessagesList(rawMessages);
+        setMess(messageDepack(rawMessages));
+
+        const decode = messageDepack(rawMessages);
+
+        setMess(messageDepack(rawMessages));
+        console.log(decode);
+      }
     } catch (e) {
       console.error("Lỗi tải tin nhắn:", e);
     }
   };
 
   useEffect(() => {
+    CURRENT_SOCKET.addMessageReceived(
+      "CHAT",
+      (id: string, data: ChatResponse) => {
+        if (id !== "CHAT") {
+          return;
+        }
+
+        if (data.event === EV_SEND_CHAT) {
+          const newRawMsg = data.data;
+
+          if (!newRawMsg.createAt) {
+            newRawMsg.createAt = getCurrentTimeStr();
+          }
+
+          setRawMessagesList((prevRaw) => {
+            const newRawList = [newRawMsg, ...prevRaw];
+
+            setMess(messageDepack(newRawList));
+            // console.log(decode);
+            return newRawList;
+          });
+        }
+      },
+    );
+
     fetchMessages();
-  }, [currentRoom, currentUser]);
 
-  useEffect(() => {
-    const handleConnect = async () => {
-      await CURRENT_SOCKET.reLogin(
-        GLOBAL_VALUE.username(),
-        await GLOBAL_VALUE.relogincode(),
-      );
-
-      await fetchMessages();
+    return () => {
+      CURRENT_SOCKET.removeMessageReceived("CHAT");
     };
-
-    CURRENT_SOCKET.onConnecteds.push(handleConnect);
-    if (CURRENT_SOCKET.isConnect()) handleConnect();
   }, [currentRoom, currentUser]);
 
   const handleDragOver: DragEventHandler<HTMLDivElement> = (e) => {
@@ -112,11 +140,24 @@ export function ChatPanel() {
   const sendData = async (payload: string, isFile: boolean = false) => {
     if (currentRoom) {
       CURRENT_SOCKET.sendChatToRoom(currentRoom, payload);
-      if (!isFile) await fetchMessages();
     } else if (currentUser) {
       CURRENT_SOCKET.sendChatToPeople(currentUser, payload);
-      if (!isFile) await fetchMessages();
     }
+
+    const localRawMsg = {
+      mes: payload,
+      name: GLOBAL_VALUE.username(),
+      type: currentRoom ? 1 : 0,
+      createAt: getCurrentTimeStr(),
+    };
+
+    setRawMessagesList((prevRaw) => {
+      const newRawList = [localRawMsg, ...prevRaw];
+      const decode = messageDepack(newRawList);
+      setMess(decode);
+      // console.log(decode);
+      return newRawList;
+    });
   };
 
   const sendChat = async () => {
@@ -152,6 +193,8 @@ export function ChatPanel() {
   };
 
   const handleUpdateMessage = (updatedMsg: Message) => {
+    updatedMsg.reactionIdx = encodeEmoji(updatedMsg.reaction);
+    updatedMsg.reaction = "";
     sendData(JSON.stringify(updatedMsg));
   };
 
@@ -181,7 +224,7 @@ export function ChatPanel() {
         <div className="chat-message-display-area glass-eff border-radius">
           {mess.map((messData: any) => (
             <ChatMessage
-              key={messData.id} // ID này là GID hoặc Server ID
+              key={messData.id}
               message={messData.data}
               isOwner={messData.isOwer}
               onUpdate={handleUpdateMessage}
@@ -193,7 +236,6 @@ export function ChatPanel() {
           ))}
         </div>
 
-        {/* Khu vực Preview File */}
         <div className="preview-area border-radius flex">
           {files.map((fileItem, index) => (
             <FilePreview
@@ -206,9 +248,8 @@ export function ChatPanel() {
           ))}
         </div>
 
-        {/* Input Area */}
-        <div className="glass-eff border-radius chat-input-container">
-          {replyingTo && (
+        {replyingTo && (
+          <div className="glass-eff border-radius chat-input-container">
             <div className="reply-indicator">
               <div className="reply-content">
                 Đang trả lời:{" "}
@@ -227,8 +268,10 @@ export function ChatPanel() {
                 ✕
               </button>
             </div>
-          )}
+          </div>
+        )}
 
+        <div className="glass-eff border-radius chat-input-container">
           <div style={{ display: "flex", width: "100%", alignItems: "center" }}>
             <input
               ref={chatInput}
