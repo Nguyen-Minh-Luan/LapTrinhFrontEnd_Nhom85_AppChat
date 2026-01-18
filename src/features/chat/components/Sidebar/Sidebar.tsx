@@ -204,7 +204,7 @@ export const Sidebar: React.FC = () => {
               </div>
               <div className="content-bottom">
                 <p className={`last-message ${item.isUnread ? "highlight" : ""}`}>
-                  {item.lastMes || "Đang tải tin nhắn"}
+                  {item.lastMes || "Chưa tải tin nhắn"}
                 </p>
                 {item.unreadCount > 0 && (
                   <div className="unread-badge">{item.unreadCount}</div>
