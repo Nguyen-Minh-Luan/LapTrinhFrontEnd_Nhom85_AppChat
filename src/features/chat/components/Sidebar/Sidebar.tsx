@@ -47,7 +47,7 @@ export const Sidebar: React.FC = () => {
               try {
                 displayContent = await decryptToken(msgObj.content || msgObj.data);
               } catch {
-                return rawData;
+                displayContent = msgObj.content || msgObj.data || "";
               }
             } else displayContent = "[Tệp đính kèm]";
           } catch (e) {
@@ -204,7 +204,7 @@ export const Sidebar: React.FC = () => {
               </div>
               <div className="content-bottom">
                 <p className={`last-message ${item.isUnread ? "highlight" : ""}`}>
-                  {item.lastMes || "No messages yet"}
+                  {item.lastMes || "Chưa tải tin nhắn"}
                 </p>
                 {item.unreadCount > 0 && (
                   <div className="unread-badge">{item.unreadCount}</div>
