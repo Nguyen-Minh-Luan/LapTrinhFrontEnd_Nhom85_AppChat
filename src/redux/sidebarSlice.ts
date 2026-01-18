@@ -36,19 +36,18 @@ const sidebarSlice = createSlice({
           lastMes: oldUser?.lastMes || newUser.lastMes || "",
           unreadCount: oldUser?.unreadCount || 0,
           isUnread: oldUser?.isUnread || false,
-          actionTime: oldUser?.actionTime || newUser.actionTime || ""
+          actionTime: newUser.actionTime || oldUser?.actionTime || new Date().toISOString()
         };
       });
-
-      state.userList = newList.sort((a: ChatItem, b: ChatItem) => 
-        getTimestamp(b.actionTime) - getTimestamp(a.actionTime)
-      );
+      state.userList = newList.sort((a, b) => getTimestamp(b.actionTime) - getTimestamp(a.actionTime));
     },
 
-    setActiveChat: (state, action: PayloadAction<ChatItem>) => {
+    setActiveChat: (state, action: PayloadAction<ChatItem | null>) => {
       state.activeChat = action.payload;
+      if (!action.payload) return;
+
       const index = state.userList.findIndex(
-        u => u.name.trim().toLowerCase() === action.payload.name.trim().toLowerCase()
+        u => u.name.trim().toLowerCase() === action.payload?.name.trim().toLowerCase()
       );
       if (index !== -1) {
         state.userList[index].unreadCount = 0;
@@ -65,32 +64,49 @@ const sidebarSlice = createSlice({
 
       if (index !== -1) {
         const existingUser = state.userList[index];
-        const newTime = getTimestamp(actionTime);
-        const oldTime = getTimestamp(existingUser.actionTime);
+        const newTime = actionTime || new Date().toISOString();
 
-        if (newTime >= oldTime || isRealtime) {
-          const updatedUser = {
-            ...existingUser,
-            lastMes: mes,
-            actionTime: actionTime || existingUser.actionTime 
-          };
+        if (isRealtime || getTimestamp(newTime) >= getTimestamp(existingUser.actionTime)) {
+          existingUser.lastMes = mes;
+          existingUser.actionTime = newTime;
 
-          if (isRealtime && state.activeChat?.name !== updatedUser.name) {
-            updatedUser.isUnread = true;
-            updatedUser.unreadCount = (updatedUser.unreadCount || 0) + 1;
+          if (isRealtime && state.activeChat?.name !== existingUser.name) {
+            existingUser.isUnread = true;
+            existingUser.unreadCount = (existingUser.unreadCount || 0) + 1;
           }
 
-          const remainingUsers = state.userList.filter((_, i) => i !== index);
-          const newList = [updatedUser, ...remainingUsers];
-
-          state.userList = newList.sort((a: ChatItem, b: ChatItem) => 
-            getTimestamp(b.actionTime) - getTimestamp(a.actionTime)
-          );
+          state.userList.sort((a, b) => getTimestamp(b.actionTime) - getTimestamp(a.actionTime));
         }
       }
-    }
+    },
+
+    addRoomToList: (state, action: PayloadAction<Partial<ChatItem>>) => {
+      const roomData = action.payload;
+      const index = state.userList.findIndex(u => u.name === roomData.name);
+      
+      if (index === -1) {
+        const newEntry: ChatItem = {
+          name: roomData.name || "Unknown",
+          type: roomData.type ?? 1,
+          lastMes: roomData.lastMes || "Bắt đầu cuộc trò chuyện...",
+          actionTime: roomData.actionTime || new Date().toISOString(),
+          unreadCount: 0,
+          isUnread: false
+        };
+        state.userList = [newEntry, ...state.userList];
+      } else {
+        state.userList[index] = { ...state.userList[index], ...roomData };
+        state.userList.sort((a, b) => getTimestamp(b.actionTime) - getTimestamp(a.actionTime));
+      }
+    },
   },
 });
 
-export const { setUserList, setActiveChat, updateLastMessage } = sidebarSlice.actions;
+export const { 
+  setUserList, 
+  setActiveChat, 
+  updateLastMessage, 
+  addRoomToList 
+} = sidebarSlice.actions;
+
 export default sidebarSlice.reducer;
